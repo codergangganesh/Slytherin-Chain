@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import {
-  Shield,
   Lock,
   User as UserIcon,
   ShieldCheck,

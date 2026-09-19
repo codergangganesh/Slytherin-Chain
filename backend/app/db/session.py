@@ -8,6 +8,7 @@ from __future__ import annotations
 from collections.abc import AsyncGenerator
 from typing import Any
 
+from sqlalchemy import event
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -15,6 +16,7 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.pool import NullPool, QueuePool
 
 from app.config.settings import get_settings
 
@@ -27,10 +29,6 @@ class Base(DeclarativeBase):
 
 _engine: AsyncEngine | None = None
 _session_factory: async_sessionmaker[AsyncSession] | None = None
-
-
-from sqlalchemy import event
-from sqlalchemy.pool import NullPool, QueuePool
 
 
 def get_engine() -> AsyncEngine:
