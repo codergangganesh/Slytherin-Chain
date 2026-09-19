@@ -10,11 +10,9 @@ import {
   Database,
   Play,
   LogOut,
-  User as UserIcon,
   ShieldAlert,
   ShieldCheck,
   Eye,
-  RefreshCw,
 } from "lucide-react";
 import { DashboardPage } from "./pages/DashboardPage";
 import { IncidentQueuePage } from "./pages/IncidentQueuePage";
@@ -55,7 +53,6 @@ export const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(
     () => !!localStorage.getItem("sentinel_token")
   );
-  const [switchingRole, setSwitchingRole] = useState(false);
   const [showSimModal, setShowSimModal] = useState(false);
   const location = useLocation();
 
@@ -88,19 +85,6 @@ export const App: React.FC = () => {
     api.logout();
     setUser(null);
     setIsAuthenticated(false);
-  };
-
-  const handleRoleSwitch = async (targetRole: "admin" | "analyst" | "viewer") => {
-    setSwitchingRole(true);
-    try {
-      const profile = await api.switchDemoRole(targetRole);
-      setUser(profile);
-      setIsAuthenticated(true);
-    } catch (err: any) {
-      alert(`Role switch error: ${err.message}`);
-    } finally {
-      setSwitchingRole(false);
-    }
   };
 
   // If not authenticated, display full modern Login Screen
@@ -173,7 +157,7 @@ export const App: React.FC = () => {
           </div>
         </div>
 
-        {/* User Info, Role Switcher & Logout */}
+        {/* User Info & Logout */}
         <div className="p-4 border-t border-slate-800/80 space-y-3 bg-slate-950/40">
           {/* Active User Card */}
           <div className="flex items-center space-x-3 px-2">
@@ -185,51 +169,6 @@ export const App: React.FC = () => {
               <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase border inline-block mt-0.5 ${roleMeta.badge}`}>
                 {roleMeta.label}
               </span>
-            </div>
-          </div>
-
-          {/* 1-Click Role Switcher */}
-          <div className="pt-2 border-t border-slate-800/60">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5 px-1">
-              Switch Persona (RBAC)
-            </span>
-            <div className="grid grid-cols-3 gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
-              <button
-                type="button"
-                onClick={() => handleRoleSwitch("admin")}
-                disabled={switchingRole || user.role === "admin"}
-                className={`py-1 text-[10px] font-bold rounded-lg transition-all ${
-                  user.role === "admin"
-                    ? "bg-purple-600 text-white shadow-sm"
-                    : "text-slate-400 hover:text-white hover:bg-slate-800"
-                }`}
-              >
-                Admin
-              </button>
-              <button
-                type="button"
-                onClick={() => handleRoleSwitch("analyst")}
-                disabled={switchingRole || user.role === "analyst"}
-                className={`py-1 text-[10px] font-bold rounded-lg transition-all ${
-                  user.role === "analyst"
-                    ? "bg-blue-600 text-white shadow-sm"
-                    : "text-slate-400 hover:text-white hover:bg-slate-800"
-                }`}
-              >
-                Analyst
-              </button>
-              <button
-                type="button"
-                onClick={() => handleRoleSwitch("viewer")}
-                disabled={switchingRole || user.role === "viewer"}
-                className={`py-1 text-[10px] font-bold rounded-lg transition-all ${
-                  user.role === "viewer"
-                    ? "bg-emerald-600 text-white shadow-sm"
-                    : "text-slate-400 hover:text-white hover:bg-slate-800"
-                }`}
-              >
-                Viewer
-              </button>
             </div>
           </div>
 
