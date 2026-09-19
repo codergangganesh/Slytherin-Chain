@@ -29,15 +29,17 @@ interface RolePersona {
   icon: React.ElementType;
 }
 
+const DEFAULT_ROLE: RolePersona = {
+  role: "admin",
+  title: "Admin",
+  username: "admin",
+  defaultPass: "admin_demo_password",
+  badge: "Full Privilege",
+  icon: ShieldAlert,
+};
+
 const ROLES: RolePersona[] = [
-  {
-    role: "admin",
-    title: "Admin",
-    username: "admin",
-    defaultPass: "admin_demo_password",
-    badge: "Full Privilege",
-    icon: ShieldAlert,
-  },
+  DEFAULT_ROLE,
   {
     role: "analyst",
     title: "SOC Analyst",
@@ -71,9 +73,9 @@ const RBAC_MATRIX = [
 ];
 
 export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
-  const [selectedRole, setSelectedRole] = useState<RolePersona>(ROLES[0]);
-  const [username, setUsername] = useState(ROLES[0].username);
-  const [password, setPassword] = useState(ROLES[0].defaultPass);
+  const [selectedRole, setSelectedRole] = useState<RolePersona>(DEFAULT_ROLE);
+  const [username, setUsername] = useState(DEFAULT_ROLE.username);
+  const [password, setPassword] = useState(DEFAULT_ROLE.defaultPass);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
