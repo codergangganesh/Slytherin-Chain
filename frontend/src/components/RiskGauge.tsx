@@ -1,7 +1,8 @@
 import React from "react";
 import type { RiskBreakdown } from "../types";
 
-export const RiskGauge: React.FC<{ breakdown: RiskBreakdown }> = ({ breakdown }) => {
+export const RiskGauge: React.FC<{ breakdown?: RiskBreakdown | null }> = ({ breakdown }) => {
+  if (!breakdown) return null;
   return (
     <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-5 backdrop-blur-sm">
       <div className="flex items-center justify-between mb-4">
