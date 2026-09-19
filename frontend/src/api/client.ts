@@ -95,12 +95,38 @@ class ApiClient {
 
   // Auth
   async login(username: string, password: string): Promise<AuthTokens> {
-    const res = await this.request<AuthTokens>("/auth/login", {
+    const res = await fetch(`${API_BASE}/auth/login`, {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, password }),
     });
-    localStorage.setItem("sentinel_token", res.access_token);
-    return res;
+    if (!res.ok) {
+      let errMessage = `HTTP error ${res.status}`;
+      try {
+        const errJson = await res.json();
+        if (errJson.detail?.error?.message) {
+          errMessage = errJson.detail.error.message;
+        } else if (errJson.detail) {
+          errMessage = typeof errJson.detail === "string" ? errJson.detail : JSON.stringify(errJson.detail);
+        }
+      } catch {
+        // Fallback
+      }
+      throw new Error(errMessage);
+    }
+    const data: AuthTokens = await res.json();
+    localStorage.setItem("sentinel_token", data.access_token);
+    return data;
+  }
+
+  async switchDemoRole(role: "admin" | "analyst" | "viewer"): Promise<UserProfile> {
+    const passMap: Record<string, string> = {
+      admin: "admin_demo_password",
+      analyst: "analyst_demo_password",
+      viewer: "viewer_demo_password",
+    };
+    await this.login(role, passMap[role] || "admin_demo_password");
+    return this.getMyProfile();
   }
 
   async getMyProfile(): Promise<UserProfile> {

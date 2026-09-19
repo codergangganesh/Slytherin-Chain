@@ -11,6 +11,10 @@ import {
   Play,
   LogOut,
   User as UserIcon,
+  ShieldAlert,
+  ShieldCheck,
+  Eye,
+  RefreshCw,
 } from "lucide-react";
 import { DashboardPage } from "./pages/DashboardPage";
 import { IncidentQueuePage } from "./pages/IncidentQueuePage";
@@ -20,46 +24,92 @@ import { ResponseActionsPage } from "./pages/ResponseActionsPage";
 import { PlaybooksPage } from "./pages/PlaybooksPage";
 import { IntegrityPage } from "./pages/IntegrityPage";
 import { SimulatorPage } from "./pages/SimulatorPage";
+import { LoginPage } from "./pages/LoginPage";
 import { AttackSimulatorModal } from "./components/AttackSimulatorModal";
 import { api } from "./api/client";
 import type { UserProfile } from "./types";
 
-const DEFAULT_USER: UserProfile = {
-  id: "656d3c54-cddc-42b8-ba5b-40a9d3b4cb9f",
-  username: "admin",
-  email: "admin@sentinelchain.io",
-  role: "admin",
-  is_active: true,
-  created_at: new Date().toISOString(),
+const ROLE_INFO = {
+  admin: {
+    label: "Administrator",
+    icon: ShieldAlert,
+    badge: "bg-purple-500/20 text-purple-300 border-purple-500/30",
+    avatarBg: "bg-purple-500/10 border-purple-500/30 text-purple-400",
+  },
+  analyst: {
+    label: "SOC Analyst",
+    icon: ShieldCheck,
+    badge: "bg-blue-500/20 text-blue-300 border-blue-500/30",
+    avatarBg: "bg-blue-500/10 border-blue-500/30 text-blue-400",
+  },
+  viewer: {
+    label: "Auditor / Viewer",
+    icon: Eye,
+    badge: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
+    avatarBg: "bg-emerald-500/10 border-emerald-500/30 text-emerald-400",
+  },
 };
 
 export const App: React.FC = () => {
-  const [user, setUser] = useState<UserProfile>(DEFAULT_USER);
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(
+    () => !!localStorage.getItem("sentinel_token")
+  );
+  const [switchingRole, setSwitchingRole] = useState(false);
   const [showSimModal, setShowSimModal] = useState(false);
   const location = useLocation();
 
+  const fetchProfile = async () => {
+    try {
+      const profile = await api.getMyProfile();
+      setUser(profile);
+      setIsAuthenticated(true);
+    } catch {
+      // If token is invalid or expired, clear and prompt login
+      localStorage.removeItem("sentinel_token");
+      setUser(null);
+      setIsAuthenticated(false);
+    }
+  };
+
   useEffect(() => {
-    const autoAuth = async () => {
-      try {
-        const token = localStorage.getItem("sentinel_token");
-        if (!token) {
-          await api.login("admin", "admin_demo_password");
-        }
-        const profile = await api.getMyProfile();
-        setUser(profile);
-      } catch {
-        // Fallback to default admin profile
-        setUser(DEFAULT_USER);
-      }
-    };
-    autoAuth();
+    const token = localStorage.getItem("sentinel_token");
+    if (token) {
+      fetchProfile();
+    } else {
+      // Auto-authenticate as admin by default for seamless hackathon onboarding
+      api.login("admin", "admin_demo_password")
+        .then(() => fetchProfile())
+        .catch(() => setIsAuthenticated(false));
+    }
   }, []);
 
   const handleLogout = () => {
-    // Reset/switch demo profile
-    localStorage.removeItem("sentinel_token");
-    setUser(DEFAULT_USER);
+    api.logout();
+    setUser(null);
+    setIsAuthenticated(false);
   };
+
+  const handleRoleSwitch = async (targetRole: "admin" | "analyst" | "viewer") => {
+    setSwitchingRole(true);
+    try {
+      const profile = await api.switchDemoRole(targetRole);
+      setUser(profile);
+      setIsAuthenticated(true);
+    } catch (err: any) {
+      alert(`Role switch error: ${err.message}`);
+    } finally {
+      setSwitchingRole(false);
+    }
+  };
+
+  // If not authenticated, display full modern Login Screen
+  if (!isAuthenticated || !user) {
+    return <LoginPage onLoginSuccess={fetchProfile} />;
+  }
+
+  const roleMeta = ROLE_INFO[user.role as keyof typeof ROLE_INFO] || ROLE_INFO.admin;
+  const RoleIcon = roleMeta.icon;
 
   const navLinks = [
     { to: "/", icon: LayoutDashboard, label: "Dashboard" },
@@ -91,7 +141,9 @@ export const App: React.FC = () => {
           <nav className="p-3 space-y-1">
             {navLinks.map((item) => {
               const Icon = item.icon;
-              const isActive = location.pathname === item.to || (item.to !== "/" && location.pathname.startsWith(item.to));
+              const isActive =
+                location.pathname === item.to ||
+                (item.to !== "/" && location.pathname.startsWith(item.to));
               return (
                 <Link
                   key={item.to}
@@ -121,21 +173,69 @@ export const App: React.FC = () => {
           </div>
         </div>
 
-        {/* User Info & Logout */}
-        <div className="p-4 border-t border-slate-800/80 space-y-3">
+        {/* User Info, Role Switcher & Logout */}
+        <div className="p-4 border-t border-slate-800/80 space-y-3 bg-slate-950/40">
+          {/* Active User Card */}
           <div className="flex items-center space-x-3 px-2">
-            <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300">
-              <UserIcon className="w-4 h-4" />
+            <div className={`w-9 h-9 rounded-xl border flex items-center justify-center ${roleMeta.avatarBg}`}>
+              <RoleIcon className="w-4 h-4" />
             </div>
-            <div className="flex-1 truncate">
-              <span className="text-xs font-semibold text-white block truncate">{user?.username}</span>
-              <span className="text-[10px] text-slate-400 uppercase tracking-wider">{user?.role}</span>
+            <div className="flex-1 min-w-0">
+              <span className="text-xs font-bold text-white block truncate">{user.username}</span>
+              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase border inline-block mt-0.5 ${roleMeta.badge}`}>
+                {roleMeta.label}
+              </span>
+            </div>
+          </div>
+
+          {/* 1-Click Role Switcher */}
+          <div className="pt-2 border-t border-slate-800/60">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5 px-1">
+              Switch Persona (RBAC)
+            </span>
+            <div className="grid grid-cols-3 gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
+              <button
+                type="button"
+                onClick={() => handleRoleSwitch("admin")}
+                disabled={switchingRole || user.role === "admin"}
+                className={`py-1 text-[10px] font-bold rounded-lg transition-all ${
+                  user.role === "admin"
+                    ? "bg-purple-600 text-white shadow-sm"
+                    : "text-slate-400 hover:text-white hover:bg-slate-800"
+                }`}
+              >
+                Admin
+              </button>
+              <button
+                type="button"
+                onClick={() => handleRoleSwitch("analyst")}
+                disabled={switchingRole || user.role === "analyst"}
+                className={`py-1 text-[10px] font-bold rounded-lg transition-all ${
+                  user.role === "analyst"
+                    ? "bg-blue-600 text-white shadow-sm"
+                    : "text-slate-400 hover:text-white hover:bg-slate-800"
+                }`}
+              >
+                Analyst
+              </button>
+              <button
+                type="button"
+                onClick={() => handleRoleSwitch("viewer")}
+                disabled={switchingRole || user.role === "viewer"}
+                className={`py-1 text-[10px] font-bold rounded-lg transition-all ${
+                  user.role === "viewer"
+                    ? "bg-emerald-600 text-white shadow-sm"
+                    : "text-slate-400 hover:text-white hover:bg-slate-800"
+                }`}
+              >
+                Viewer
+              </button>
             </div>
           </div>
 
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center space-x-2 py-1.5 px-3 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-lg text-xs text-slate-400 hover:text-white transition-colors"
+            className="w-full flex items-center justify-center space-x-2 py-1.5 px-3 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-xl text-xs text-slate-400 hover:text-white transition-colors"
           >
             <LogOut className="w-3.5 h-3.5" />
             <span>Sign Out</span>
