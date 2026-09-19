@@ -20,6 +20,7 @@ import { ResponseActionsPage } from "./pages/ResponseActionsPage";
 import { PlaybooksPage } from "./pages/PlaybooksPage";
 import { IntegrityPage } from "./pages/IntegrityPage";
 import { SimulatorPage } from "./pages/SimulatorPage";
+import { AttackSimulatorModal } from "./components/AttackSimulatorModal";
 import { api } from "./api/client";
 import type { UserProfile } from "./types";
 
@@ -34,6 +35,7 @@ const DEFAULT_USER: UserProfile = {
 
 export const App: React.FC = () => {
   const [user, setUser] = useState<UserProfile>(DEFAULT_USER);
+  const [showSimModal, setShowSimModal] = useState(false);
   const location = useLocation();
 
   useEffect(() => {
@@ -106,6 +108,17 @@ export const App: React.FC = () => {
               );
             })}
           </nav>
+
+          {/* Quick Attack Simulator Trigger for Live Pitch */}
+          <div className="p-3">
+            <button
+              onClick={() => setShowSimModal(true)}
+              className="w-full flex items-center justify-center space-x-2 py-2 px-3 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-red-600/20 transition-all transform active:scale-95"
+            >
+              <Zap className="w-3.5 h-3.5" />
+              <span>Simulate Attack</span>
+            </button>
+          </div>
         </div>
 
         {/* User Info & Logout */}
@@ -144,6 +157,12 @@ export const App: React.FC = () => {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
+
+      {/* Attack Simulator Live Launcher Modal */}
+      <AttackSimulatorModal
+        isOpen={showSimModal}
+        onClose={() => setShowSimModal(false)}
+      />
     </div>
   );
 };

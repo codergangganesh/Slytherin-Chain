@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Zap, CheckCircle, XCircle, RotateCcw, RefreshCw } from "lucide-react";
 import { api } from "../api/client";
 import type { ResponseAction } from "../types";
-import { GuardrailDecisionsList } from "../components/GuardrailDecisionsList";
+import { GuardrailReasoningCard } from "../components/GuardrailReasoningCard";
 
 export const ResponseActionsPage: React.FC = () => {
   const [actions, setActions] = useState<ResponseAction[]>([]);
@@ -153,7 +153,13 @@ export const ResponseActionsPage: React.FC = () => {
 
               {act.guardrail_decisions && act.guardrail_decisions.length > 0 && (
                 <div className="pt-2 border-t border-slate-800">
-                  <GuardrailDecisionsList decisions={act.guardrail_decisions} />
+                  <GuardrailReasoningCard
+                    decisions={act.guardrail_decisions}
+                    actionType={act.action_type}
+                    target={act.target}
+                    isAutonomous={!act.approved_by}
+                    status={act.status}
+                  />
                 </div>
               )}
 

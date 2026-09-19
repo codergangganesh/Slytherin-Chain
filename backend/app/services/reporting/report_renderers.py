@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import copy
+import hashlib
 import json
+from typing import Any
 
 from jinja2 import Environment, select_autoescape
 
@@ -99,6 +102,48 @@ HTML_REPORT_TEMPLATE = """<!DOCTYPE html>
 
 class ReportRenderers:
     """Renders IncidentReportDocument into JSON, Markdown, or PDF format."""
+
+    @staticmethod
+    def _mask_value(val: str) -> str:
+        if not val:
+            return "[REDACTED]"
+        h = hashlib.sha256(val.encode()).hexdigest()[:8]
+        return f"[REDACTED-{h}]"
+
+    @classmethod
+    def redact_document(cls, doc: IncidentReportDocument) -> IncidentReportDocument:
+        """Create a privacy-preserving copy masking PII while retaining cryptographic proof."""
+        redacted_meta = copy.deepcopy(doc.metadata)
+        if "assigned_to" in redacted_meta and redacted_meta["assigned_to"]:
+            redacted_meta["assigned_to"] = cls._mask_value(str(redacted_meta["assigned_to"]))
+
+        redacted_actions: list[dict[str, Any]] = []
+        for a in doc.response_actions:
+            item = copy.deepcopy(a)
+            if "target" in item and item["target"]:
+                item["target"] = cls._mask_value(str(item["target"]))
+            redacted_actions.append(item)
+
+        redacted_timeline: list[dict[str, Any]] = []
+        for t in doc.attack_sequence:
+            item = copy.deepcopy(t)
+            if "actor" in item and item["actor"] and item["actor"] != "SYSTEM":
+                item["actor"] = cls._mask_value(str(item["actor"]))
+            redacted_timeline.append(item)
+
+        return IncidentReportDocument(
+            schema_version=doc.schema_version,
+            metadata=redacted_meta,
+            generated_at=doc.generated_at,
+            executive_summary=f"[REDACTED COMPLIANCE EXPORT - PII MASKED]\n{doc.executive_summary}",
+            threat_details=copy.deepcopy(doc.threat_details),
+            attack_sequence=redacted_timeline,
+            affected_assets_and_impact=copy.deepcopy(doc.affected_assets_and_impact),
+            response_actions=redacted_actions,
+            evidence=copy.deepcopy(doc.evidence),
+            resolution_and_recommendations=copy.deepcopy(doc.resolution_and_recommendations),
+            integrity_attestation=copy.deepcopy(doc.integrity_attestation),
+        )
 
     @staticmethod
     def render_json(doc: IncidentReportDocument) -> bytes:

@@ -16,7 +16,7 @@ import type { IncidentDetail, ResponseAction, TimelineEntry } from "../types";
 import { PriorityBadge, StatusBadge } from "../components/SeverityBadge";
 import { RiskGauge } from "../components/RiskGauge";
 import { TimelineView } from "../components/TimelineView";
-import { GuardrailDecisionsList } from "../components/GuardrailDecisionsList";
+import { GuardrailReasoningCard } from "../components/GuardrailReasoningCard";
 
 export const IncidentDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -27,6 +27,7 @@ export const IncidentDetailPage: React.FC = () => {
   const [noteText, setNoteText] = useState("");
   const [submittingNote, setSubmittingNote] = useState(false);
   const [reportFormat, setReportFormat] = useState<"json" | "md" | "pdf">("pdf");
+  const [redactedReport, setRedactedReport] = useState(false);
   const [generatingReport, setGeneratingReport] = useState(false);
   const [reportUrl, setReportUrl] = useState<string | null>(null);
 
@@ -114,7 +115,7 @@ export const IncidentDetailPage: React.FC = () => {
     setGeneratingReport(true);
     setReportUrl(null);
     try {
-      const res = await api.generateReport(id, reportFormat);
+      const res = await api.generateReport(id, reportFormat, redactedReport);
       setReportUrl(res.download_url);
     } catch (err: any) {
       alert(`Report error: ${err.message}`);
@@ -238,7 +239,13 @@ export const IncidentDetailPage: React.FC = () => {
 
                     {/* Guardrail Checklist */}
                     {act.guardrail_decisions && act.guardrail_decisions.length > 0 && (
-                      <GuardrailDecisionsList decisions={act.guardrail_decisions} />
+                      <GuardrailReasoningCard
+                        decisions={act.guardrail_decisions}
+                        actionType={act.action_type}
+                        target={act.target}
+                        isAutonomous={!act.approved_by}
+                        status={act.status}
+                      />
                     )}
 
                     {/* Action Execution Controls */}
@@ -285,23 +292,35 @@ export const IncidentDetailPage: React.FC = () => {
             <p className="text-xs text-slate-400">
               Export comprehensive 9-section report with cryptographic integrity attestation.
             </p>
-            <div className="flex items-center space-x-2">
-              <select
-                value={reportFormat}
-                onChange={(e) => setReportFormat(e.target.value as any)}
-                className="bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none"
-              >
-                <option value="pdf">PDF Document</option>
-                <option value="md">Markdown</option>
-                <option value="json">JSON Format</option>
-              </select>
-              <button
-                onClick={handleGenerateReport}
-                disabled={generatingReport}
-                className="flex-1 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs font-semibold transition-colors disabled:opacity-50"
-              >
-                {generatingReport ? "Generating..." : "Generate Report"}
-              </button>
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <select
+                  value={reportFormat}
+                  onChange={(e) => setReportFormat(e.target.value as any)}
+                  className="bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none"
+                >
+                  <option value="pdf">PDF Document</option>
+                  <option value="md">Markdown</option>
+                  <option value="json">JSON Format</option>
+                </select>
+                <button
+                  onClick={handleGenerateReport}
+                  disabled={generatingReport}
+                  className="flex-1 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs font-semibold transition-colors disabled:opacity-50"
+                >
+                  {generatingReport ? "Generating..." : "Generate Report"}
+                </button>
+              </div>
+
+              <label className="flex items-center space-x-2 text-xs text-slate-400 cursor-pointer pt-1">
+                <input
+                  type="checkbox"
+                  checked={redactedReport}
+                  onChange={(e) => setRedactedReport(e.target.checked)}
+                  className="rounded border-slate-700 bg-slate-950 text-blue-600 focus:ring-0 w-3.5 h-3.5"
+                />
+                <span>Redact PII / Internal Hosts (Auditor & Insurer Safe)</span>
+              </label>
             </div>
 
             {reportUrl && (

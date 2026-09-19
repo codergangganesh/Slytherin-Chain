@@ -221,10 +221,17 @@ class ApiClient {
   }
 
   // Reports
-  async generateReport(incidentId: string, format: "json" | "md" | "pdf"): Promise<{ download_url: string }> {
-    return this.request<{ download_url: string }>(`/reports/incidents/${incidentId}?format=${format}`, {
-      method: "POST",
-    });
+  async generateReport(
+    incidentId: string,
+    format: "json" | "md" | "pdf",
+    redacted: boolean = false
+  ): Promise<{ download_url: string }> {
+    return this.request<{ download_url: string }>(
+      `/reports/incidents/${incidentId}?format=${format}&redacted=${redacted}`,
+      {
+        method: "POST",
+      }
+    );
   }
 
   // Settings

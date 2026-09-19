@@ -48,10 +48,16 @@ async def generate_incident_report(
     session: Annotated[AsyncSession, Depends(get_db_session)],
     current_user: Annotated[User, Depends(require_viewer)],
     format: str = Query("json", pattern="^(json|md|pdf)$"),
+    redacted: bool = Query(
+        False, description="Cryptographically mask sensitive PII and internal targets"
+    ),
 ) -> GenerateReportResponse:
     """Generate a structured incident report in JSON, Markdown, or PDF format."""
     builder = IncidentReportBuilder(session)
     doc = await builder.build_report(incident_id)
+
+    if redacted:
+        doc = ReportRenderers.redact_document(doc)
 
     if format == "json":
         data = ReportRenderers.render_json(doc)
