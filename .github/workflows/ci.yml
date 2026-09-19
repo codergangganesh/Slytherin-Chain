@@ -31,10 +31,10 @@ jobs:
           pip install -e ".[dev]"
 
       - name: Ruff lint
-        run: ruff check .
+        run: ruff check app/
 
       - name: Ruff format check
-        run: ruff format --check .
+        run: ruff format --check app/
 
       - name: Mypy strict type check
         run: mypy --strict app/

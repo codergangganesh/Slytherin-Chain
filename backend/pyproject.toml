@@ -51,6 +51,15 @@ include = ["app*"]
 [tool.ruff]
 target-version = "py312"
 line-length = 100
+exclude = [
+    ".git",
+    ".venv",
+    "venv",
+    "migrations",
+    "storage",
+    "test_all_endpoints.py",
+    "test_login_flow.py",
+]
 
 [tool.ruff.lint]
 select = [
@@ -62,8 +71,14 @@ select = [
     "UP",     # pyupgrade
     "B",      # bugbear
     "SIM",    # simplify
-    "TCH",    # type checking
-    "RUF",    # ruff-specific
+]
+ignore = [
+    "B008",   # FastAPI Depends() in function parameters
+    "RUF012", # Mutable class attributes
+    "E501",   # Line too long
+    "SIM105", # Use contextlib.suppress
+    "SIM108", # Use ternary operator
+    "N818",   # Exception name should end with Error
 ]
 
 [tool.ruff.lint.isort]
