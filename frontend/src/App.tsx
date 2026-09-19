@@ -26,6 +26,7 @@ import { LoginPage } from "./pages/LoginPage";
 import { AttackSimulatorModal } from "./components/AttackSimulatorModal";
 import { api } from "./api/client";
 import type { UserProfile } from "./types";
+import logoImg from "./assets/logo.jpg";
 
 const ROLE_INFO = {
   admin: {
@@ -111,13 +112,15 @@ export const App: React.FC = () => {
       <aside className="w-64 bg-slate-900/90 border-r border-slate-800/80 flex flex-col justify-between backdrop-blur-xl z-20">
         <div>
           {/* Logo Header */}
-          <div className="h-16 flex items-center px-6 border-b border-slate-800/80 space-x-3">
-            <div className="p-2 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 shadow-md shadow-blue-500/20 text-white">
-              <Shield className="w-5 h-5" />
-            </div>
+          <div className="h-16 flex items-center px-4 border-b border-slate-800/80 space-x-3">
+            <img
+              src={logoImg}
+              alt="SentinelChain Logo"
+              className="w-9 h-9 rounded-xl object-cover shadow-md shadow-blue-500/20 ring-1 ring-blue-500/30"
+            />
             <div>
               <span className="font-bold text-sm text-white tracking-wide block">SentinelChain</span>
-              <span className="text-[10px] text-blue-400 font-mono font-medium tracking-wider">v0.1.0 MVP</span>
+              <span className="text-[10px] text-blue-400 font-mono font-medium tracking-wider">v1.0 SOC Command</span>
             </div>
           </div>
 

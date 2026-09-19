@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="./frontend/public/logo.jpg" width="150" alt="SentinelChain Logo" style="border-radius: 24px;" />
+</p>
+
 # SentinelChain (Slytherin-Chain)
 
 > **Autonomous Threat Response & Incident Management Platform with Blockchain-Anchored Audit Integrity**

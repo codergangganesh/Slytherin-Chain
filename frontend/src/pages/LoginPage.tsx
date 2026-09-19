@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { api } from "../api/client";
 import socHeroImg from "../assets/soc_command_center.jpg";
+import logoImg from "../assets/logo.jpg";
 
 interface LoginPageProps {
   onLoginSuccess: () => void;
@@ -121,8 +122,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         
         {/* Top Brand Pill (Matching Reference Image) */}
         <div className="flex items-center justify-between">
-          <div className="inline-flex items-center space-x-2.5 px-4 py-2 rounded-full bg-slate-900 border border-slate-800 text-slate-200 text-xs sm:text-sm font-bold tracking-wide shadow-sm">
-            <Shield className="w-4 h-4 text-amber-400" />
+          <div className="inline-flex items-center space-x-2.5 px-3.5 py-1.5 rounded-full bg-slate-900 border border-slate-800 text-slate-200 text-xs sm:text-sm font-bold tracking-wide shadow-sm">
+            <img src={logoImg} alt="SentinelChain" className="w-5 h-5 rounded-full object-cover ring-1 ring-amber-500/40" />
             <span>SentinelChain</span>
           </div>
           <span className="text-xs font-mono text-slate-500 uppercase tracking-wider font-semibold">
