@@ -1,0 +1,17 @@
+id: POWERSHELL-004
+title: Suspicious Encoded PowerShell Execution
+description: Execution of PowerShell with encoded commands, bypass flags, or download cradles.
+type: match
+severity: 0.8
+confidence: 0.85
+match:
+  event_type: process_started
+  process_name: powershell.exe
+  command_line_regex: "(?i)(-enc|-encodedcommand|downloadstring|bypass|iex|webclient)"
+group_by: host
+mitre:
+  tactic: Execution
+  technique_id: T1059.001
+  technique_name: PowerShell
+playbook_category: malware
+suppress_for_seconds: 180

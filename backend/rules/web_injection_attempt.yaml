@@ -1,0 +1,16 @@
+id: WEB-INJECT-007
+title: Web Application SQLi / XSS Injection Attempt
+description: Malicious SQL injection or Cross-Site Scripting patterns in HTTP request paths or parameters.
+type: match
+severity: 0.7
+confidence: 0.8
+match:
+  event_type: http_request
+  http_path_regex: "(?i)(union.*select|exec.*xp_|script>|alert\\(|or\\s+1=1|--|/etc/passwd)"
+group_by: src_ip
+mitre:
+  tactic: Initial Access
+  technique_id: T1190
+  technique_name: Exploit Public-Facing Application
+playbook_category: web_attack
+suppress_for_seconds: 120

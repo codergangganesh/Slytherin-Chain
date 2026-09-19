@@ -1,0 +1,18 @@
+id: PORT-SCAN-003
+title: Network Port Scan Reconnaissance
+description: Single source IP connecting to multiple distinct destination ports within a short window.
+type: distinct_count
+severity: 0.5
+confidence: 0.75
+match:
+  event_type: port_connection
+group_by: src_ip
+distinct_field: dst_port
+threshold: 5
+window_seconds: 60
+mitre:
+  tactic: Discovery
+  technique_id: T1046
+  technique_name: Network Service Discovery
+playbook_category: reconnaissance
+suppress_for_seconds: 300

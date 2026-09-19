@@ -1,0 +1,46 @@
+{
+  "ips": {
+    "198.51.100.42": {
+      "reputation_score": 0.95,
+      "tags": ["known-attacker", "ssh-brute-forcer", "tor-exit"],
+      "last_reported": "2026-09-18T12:00:00Z"
+    },
+    "203.0.113.88": {
+      "reputation_score": 0.85,
+      "tags": ["c2-node", "malware-distributor"],
+      "last_reported": "2026-09-18T14:30:00Z"
+    },
+    "192.0.2.15": {
+      "reputation_score": 0.70,
+      "tags": ["port-scanner", "recon-bot"],
+      "last_reported": "2026-09-18T08:15:00Z"
+    },
+    "10.0.0.1": {
+      "reputation_score": 0.0,
+      "tags": ["internal-gateway", "allowlisted"],
+      "last_reported": null
+    },
+    "172.16.0.1": {
+      "reputation_score": 0.0,
+      "tags": ["admin-subnet", "allowlisted"],
+      "last_reported": null
+    }
+  },
+  "file_hashes": {
+    "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855": {
+      "reputation_score": 0.0,
+      "threat_name": "empty_file",
+      "tags": ["benign"]
+    },
+    "a1b2c3d4e5f67890123456789abcdef0123456789abcdef0123456789abcdef0": {
+      "reputation_score": 0.99,
+      "threat_name": "Ransom.WannaCry.Gen",
+      "tags": ["ransomware", "encryptor"]
+    },
+    "b8c9d0e1f2a34567890123456789abcdef0123456789abcdef0123456789abcdef": {
+      "reputation_score": 0.90,
+      "threat_name": "Trojan.PowerShell.Stager",
+      "tags": ["trojan", "stager"]
+    }
+  }
+}

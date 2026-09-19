@@ -1,0 +1,18 @@
+id: SSH-BRUTE-001
+title: SSH Brute Force Attempt
+description: Many failed SSH logins from a single source IP within a short time window.
+type: threshold
+severity: 0.6
+confidence: 0.7
+match:
+  event_type: login_failed
+  source: ssh
+group_by: src_ip
+threshold: 5
+window_seconds: 120
+mitre:
+  tactic: Credential Access
+  technique_id: T1110
+  technique_name: Brute Force
+playbook_category: brute_force
+suppress_for_seconds: 300

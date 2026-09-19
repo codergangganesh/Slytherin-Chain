@@ -1,0 +1,17 @@
+id: BRUTE-SUCCESS-002
+title: Brute Force Followed by Successful Login
+description: Failed login attempts followed by a successful login for the same account or IP.
+type: sequence
+severity: 0.85
+confidence: 0.9
+sequence:
+  - event_type: login_failed
+  - event_type: login_success
+group_by: src_ip
+window_seconds: 300
+mitre:
+  tactic: Initial Access
+  technique_id: T1078
+  technique_name: Valid Accounts
+playbook_category: brute_force
+suppress_for_seconds: 300

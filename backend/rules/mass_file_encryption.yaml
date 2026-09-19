@@ -1,0 +1,17 @@
+id: RANSOMWARE-005
+title: Mass File Encryption / Rename Activity
+description: Rapid high-volume file modification or renaming indicative of ransomware behavior.
+type: threshold
+severity: 0.95
+confidence: 0.9
+match:
+  event_type: file_modified
+group_by: host
+threshold: 5
+window_seconds: 60
+mitre:
+  tactic: Impact
+  technique_id: T1486
+  technique_name: Data Encrypted for Impact
+playbook_category: ransomware
+suppress_for_seconds: 300
