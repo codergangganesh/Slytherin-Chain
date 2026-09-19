@@ -14,12 +14,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Install Python dependencies
-COPY pyproject.toml .
-RUN pip install --no-cache-dir -e ".[dev]"
-
-# Copy application code
+# Copy application code and install dependencies
 COPY . .
+RUN pip install --no-cache-dir -e ".[dev]"
 
 # Expose the API port
 EXPOSE 8000

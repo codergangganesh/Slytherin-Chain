@@ -109,6 +109,9 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
 
+      - name: Install contract dependencies
+        run: forge install foundry-rs/forge-std --no-commit
+
       - name: Run Forge tests
         run: forge test -vvv
 
