@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Routes, Route, Link, useLocation, Navigate } from "react-router-dom";
 import {
-  Shield,
   LayoutDashboard,
   AlertTriangle,
   Server,
