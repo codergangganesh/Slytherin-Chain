@@ -26,7 +26,9 @@ class DetectionService:
         if rules is not None:
             self._rules = rules
         else:
-            default_dir = rules_directory or Path(__file__).resolve().parent.parent.parent.parent / "rules"
+            default_dir = (
+                rules_directory or Path(__file__).resolve().parent.parent.parent.parent / "rules"
+            )
             self._rules = RuleLoader.load_rules_from_directory(default_dir)
 
     @property

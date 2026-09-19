@@ -7,12 +7,13 @@ health endpoints, and all routers registered under /api/v1.
 from __future__ import annotations
 
 import asyncio
-from contextlib import asynccontextmanager
-from datetime import datetime, timezone
 import json
-from pathlib import Path
 import sys
-from typing import Any, AsyncGenerator
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Any
 
 # Ensure repository root is in sys.path
 _ROOT_DIR = str(Path(__file__).resolve().parents[2])
@@ -65,9 +66,7 @@ APP_VERSION = "0.1.0"
 class CorrelationIdMiddleware(BaseHTTPMiddleware):
     """Injects or propagates a correlation ID through every request."""
 
-    async def dispatch(
-        self, request: Request, call_next: RequestResponseEndpoint
-    ) -> Response:
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         """Process the request, attaching a correlation ID."""
         incoming_id = request.headers.get("X-Correlation-ID", "")
         if incoming_id:
@@ -146,7 +145,7 @@ def _build_health_response() -> dict[str, Any]:
         "status": "ok",
         "service": APP_TITLE,
         "version": APP_VERSION,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
     }
 
 
@@ -183,8 +182,8 @@ async def _check_dependency_health(settings: Any) -> dict[str, Any]:
 
     # MinIO
     try:
-        from minio import Minio
         import urllib3
+        from minio import Minio
 
         http_client = urllib3.PoolManager(timeout=urllib3.Timeout(connect=0.2, read=0.3))
         minio_client = Minio(
@@ -216,7 +215,7 @@ async def _check_dependency_health(settings: Any) -> dict[str, Any]:
         "status": "ok" if all_ok else "degraded",
         "service": APP_TITLE,
         "version": APP_VERSION,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "checks": checks,
     }
 
@@ -318,8 +317,9 @@ def create_app() -> FastAPI:
     # Direct top-level alias for playbooks
     @app.get("/api/v1/playbooks", tags=["Playbooks"], include_in_schema=False)
     async def playbooks_alias() -> list[dict[str, Any]]:
-        from app.services.response.playbook_loader import PlaybookLoader
         from pathlib import Path
+
+        from app.services.response.playbook_loader import PlaybookLoader
 
         pb_dir = Path(__file__).resolve().parent.parent / "playbooks"
         loaded = PlaybookLoader.load_from_directory(pb_dir)

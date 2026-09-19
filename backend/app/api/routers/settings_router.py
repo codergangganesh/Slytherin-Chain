@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,7 +16,7 @@ from app.db.session import get_db_session
 from app.domain.enums import EntryType
 from app.domain.user import User
 from app.services.integrity.hash_chain_ledger import HashChainLedger
-from app.services.response.playbook_loader import PlaybookLoader, ResponsePlaybookConfig
+from app.services.response.playbook_loader import PlaybookLoader
 
 router = APIRouter(prefix="/settings", tags=["System Settings"])
 
@@ -111,6 +111,7 @@ async def list_playbooks(
 ) -> list[dict[str, Any]]:
     """Retrieve all loaded response playbooks."""
     from pathlib import Path
+
     pb_dir = Path(__file__).resolve().parent.parent.parent.parent / "playbooks"
     if not pb_dir.exists():
         pb_dir = Path(__file__).resolve().parents[2] / "backend" / "playbooks"

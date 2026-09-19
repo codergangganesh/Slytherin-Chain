@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.adapters.threat_intel.offline_intel_provider import (

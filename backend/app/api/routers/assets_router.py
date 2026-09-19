@@ -73,7 +73,9 @@ async def get_asset(
     if not asset:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail={"error": {"code": "ASSET_NOT_FOUND", "message": f"Asset '{asset_id}' not found"}},
+            detail={
+                "error": {"code": "ASSET_NOT_FOUND", "message": f"Asset '{asset_id}' not found"}
+            },
         )
     return AssetResponse(
         id=asset.id,
@@ -91,7 +93,9 @@ async def get_asset(
 
 
 @router.post("", response_model=AssetResponse, status_code=status.HTTP_201_CREATED)
-@router.post("/", response_model=AssetResponse, status_code=status.HTTP_201_CREATED, include_in_schema=False)
+@router.post(
+    "/", response_model=AssetResponse, status_code=status.HTTP_201_CREATED, include_in_schema=False
+)
 async def create_asset(
     payload: AssetCreateRequest,
     session: Annotated[AsyncSession, Depends(get_db_session)],
@@ -103,7 +107,12 @@ async def create_asset(
     if existing:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail={"error": {"code": "ASSET_EXISTS", "message": f"Asset with hostname '{payload.hostname}' already exists"}},
+            detail={
+                "error": {
+                    "code": "ASSET_EXISTS",
+                    "message": f"Asset with hostname '{payload.hostname}' already exists",
+                }
+            },
         )
 
     asset = await repo.create(
@@ -152,7 +161,9 @@ async def update_asset(
     if not asset:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail={"error": {"code": "ASSET_NOT_FOUND", "message": f"Asset '{asset_id}' not found"}},
+            detail={
+                "error": {"code": "ASSET_NOT_FOUND", "message": f"Asset '{asset_id}' not found"}
+            },
         )
     return AssetResponse(
         id=asset.id,
@@ -181,5 +192,7 @@ async def delete_asset(
     if not deleted:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail={"error": {"code": "ASSET_NOT_FOUND", "message": f"Asset '{asset_id}' not found"}},
+            detail={
+                "error": {"code": "ASSET_NOT_FOUND", "message": f"Asset '{asset_id}' not found"}
+            },
         )

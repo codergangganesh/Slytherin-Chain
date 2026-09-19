@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -28,7 +28,7 @@ class ActionExpiryService:
     async def process_expired_actions(self) -> int:
         """Scan and expire active actions with lapsed TTL."""
         expired = await self._action_repo.list_expired_actions()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         count = 0
 
         for action in expired:

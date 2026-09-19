@@ -50,14 +50,20 @@ class AuditLedgerRepository:
 
     async def get_latest_entry(self) -> AuditLedgerEntry | None:
         """Get the most recent ledger entry."""
-        stmt = select(AuditLedgerEntryOrm).order_by(AuditLedgerEntryOrm.sequence_number.desc()).limit(1)
+        stmt = (
+            select(AuditLedgerEntryOrm)
+            .order_by(AuditLedgerEntryOrm.sequence_number.desc())
+            .limit(1)
+        )
         result = await self._session.execute(stmt)
         orm = result.scalar_one_or_none()
         return self._to_domain(orm) if orm else None
 
     async def get_by_sequence(self, sequence_number: int) -> AuditLedgerEntry | None:
         """Get ledger entry by sequence number."""
-        stmt = select(AuditLedgerEntryOrm).where(AuditLedgerEntryOrm.sequence_number == sequence_number)
+        stmt = select(AuditLedgerEntryOrm).where(
+            AuditLedgerEntryOrm.sequence_number == sequence_number
+        )
         result = await self._session.execute(stmt)
         orm = result.scalar_one_or_none()
         return self._to_domain(orm) if orm else None

@@ -5,9 +5,9 @@ Maps all domain tables according to MASTER_PROMPT Section 9.
 
 from __future__ import annotations
 
+import uuid
 from datetime import datetime
 from typing import Any
-import uuid
 
 from sqlalchemy import (
     JSON,
@@ -55,7 +55,9 @@ class UserOrm(Base):
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     role: Mapped[UserRole] = mapped_column(String(32), nullable=False, default=UserRole.VIEWER)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow, nullable=False
+    )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
     )
@@ -71,7 +73,9 @@ class ApiKeyOrm(Base):
     key_hash: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
     prefix: Mapped[str] = mapped_column(String(16), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow, nullable=False
+    )
     last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
@@ -91,7 +95,9 @@ class AssetOrm(Base):
     is_internet_facing: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     owner: Mapped[str] = mapped_column(String(128), nullable=False, default="Security Ops")
     tags: Mapped[list[str]] = mapped_column(JSON_TYPE, default=list, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow, nullable=False
+    )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
     )
@@ -103,8 +109,12 @@ class EventOrm(Base):
     __tablename__ = "events"
 
     event_id: Mapped[uuid.UUID] = mapped_column(UUID_TYPE, primary_key=True, default=uuid.uuid4)
-    occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
-    ingested_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    occurred_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, index=True
+    )
+    ingested_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow, nullable=False
+    )
     source: Mapped[EventSource] = mapped_column(String(32), nullable=False, index=True)
     event_type: Mapped[EventType] = mapped_column(String(64), nullable=False, index=True)
     host: Mapped[str | None] = mapped_column(String(128), nullable=True, index=True)
@@ -144,7 +154,9 @@ class AlertOrm(Base):
     playbook_category: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
     matched_event_ids: Mapped[list[str]] = mapped_column(JSON_TYPE, default=list, nullable=False)
     group_by_key: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow, nullable=False
+    )
     incident_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID_TYPE, ForeignKey("incidents.id", ondelete="SET NULL"), nullable=True, index=True
     )
@@ -177,7 +189,9 @@ class IncidentOrm(Base):
     mitre_tactics: Mapped[list[str]] = mapped_column(JSON_TYPE, default=list, nullable=False)
     mitre_techniques: Mapped[list[str]] = mapped_column(JSON_TYPE, default=list, nullable=False)
     affected_asset_ids: Mapped[list[str]] = mapped_column(JSON_TYPE, default=list, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow, nullable=False, index=True
+    )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
     )
@@ -185,7 +199,9 @@ class IncidentOrm(Base):
     close_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     alerts: Mapped[list[AlertOrm]] = relationship("AlertOrm", back_populates="incident")
-    actions: Mapped[list[ResponseActionOrm]] = relationship("ResponseActionOrm", back_populates="incident")
+    actions: Mapped[list[ResponseActionOrm]] = relationship(
+        "ResponseActionOrm", back_populates="incident"
+    )
     timeline_entries: Mapped[list[TimelineEntryOrm]] = relationship(
         "TimelineEntryOrm", back_populates="incident", cascade="all, delete-orphan"
     )
@@ -200,7 +216,9 @@ class TimelineEntryOrm(Base):
     incident_id: Mapped[uuid.UUID] = mapped_column(
         UUID_TYPE, ForeignKey("incidents.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    timestamp: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow, nullable=False
+    )
     entry_type: Mapped[str] = mapped_column(String(64), nullable=False)
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
@@ -223,7 +241,9 @@ class IncidentAlertOrm(Base):
     alert_id: Mapped[uuid.UUID] = mapped_column(
         UUID_TYPE, ForeignKey("alerts.id", ondelete="CASCADE"), primary_key=True
     )
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow, nullable=False
+    )
 
 
 class ResponseActionOrm(Base):
@@ -240,12 +260,20 @@ class ResponseActionOrm(Base):
     status: Mapped[ActionStatus] = mapped_column(
         String(32), nullable=False, default=ActionStatus.PROPOSED, index=True
     )
-    idempotency_key: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
+    idempotency_key: Mapped[str] = mapped_column(
+        String(255), unique=True, nullable=False, index=True
+    )
     parameters: Mapped[dict[str, Any]] = mapped_column(JSON_TYPE, default=dict, nullable=False)
-    guardrail_decisions: Mapped[list[dict[str, Any]]] = mapped_column(JSON_TYPE, default=list, nullable=False)
+    guardrail_decisions: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSON_TYPE, default=list, nullable=False
+    )
     ttl_seconds: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, index=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow, nullable=False
+    )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
     )
@@ -254,7 +282,9 @@ class ResponseActionOrm(Base):
     approved_by: Mapped[str | None] = mapped_column(String(64), nullable=True)
     denial_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
     rollback_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
-    execution_result: Mapped[dict[str, Any]] = mapped_column(JSON_TYPE, default=dict, nullable=False)
+    execution_result: Mapped[dict[str, Any]] = mapped_column(
+        JSON_TYPE, default=dict, nullable=False
+    )
     retry_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
     incident: Mapped[IncidentOrm] = relationship("IncidentOrm", back_populates="actions")
@@ -269,8 +299,12 @@ class BlocklistEntryOrm(Base):
     reason: Mapped[str] = mapped_column(Text, nullable=False)
     incident_id: Mapped[uuid.UUID | None] = mapped_column(UUID_TYPE, nullable=True)
     action_id: Mapped[uuid.UUID | None] = mapped_column(UUID_TYPE, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow, nullable=False
+    )
+    expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, index=True
+    )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False, index=True)
 
 
@@ -283,7 +317,9 @@ class QuarantinedHostOrm(Base):
     reason: Mapped[str] = mapped_column(Text, nullable=False)
     incident_id: Mapped[uuid.UUID | None] = mapped_column(UUID_TYPE, nullable=True)
     action_id: Mapped[uuid.UUID | None] = mapped_column(UUID_TYPE, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow, nullable=False
+    )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False, index=True)
 
 
@@ -296,7 +332,9 @@ class DisabledUserOrm(Base):
     reason: Mapped[str] = mapped_column(Text, nullable=False)
     incident_id: Mapped[uuid.UUID | None] = mapped_column(UUID_TYPE, nullable=True)
     action_id: Mapped[uuid.UUID | None] = mapped_column(UUID_TYPE, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow, nullable=False
+    )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False, index=True)
 
 
@@ -309,7 +347,9 @@ class AuditLedgerEntryOrm(Base):
     entry_type: Mapped[EntryType] = mapped_column(String(64), nullable=False, index=True)
     incident_id: Mapped[uuid.UUID | None] = mapped_column(UUID_TYPE, nullable=True, index=True)
     payload: Mapped[dict[str, Any]] = mapped_column(JSON_TYPE, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow, nullable=False
+    )
     previous_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     entry_hash: Mapped[str] = mapped_column(String(64), unique=True, nullable=False, index=True)
     anchor_batch_id: Mapped[uuid.UUID | None] = mapped_column(
@@ -334,7 +374,9 @@ class AnchorBatchOrm(Base):
     block_number: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     contract_address: Mapped[str | None] = mapped_column(String(42), nullable=True)
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow, nullable=False
+    )
     anchored_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
@@ -354,7 +396,9 @@ class EvidenceItemOrm(Base):
     storage_path: Mapped[str] = mapped_column(String(512), nullable=False)
     collected_by: Mapped[str] = mapped_column(String(64), nullable=False, default="system")
     description: Mapped[str] = mapped_column(Text, nullable=False, default="")
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow, nullable=False
+    )
 
 
 class ReportOrm(Base):
@@ -371,7 +415,9 @@ class ReportOrm(Base):
     file_hash_sha256: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
     file_size_bytes: Mapped[int] = mapped_column(BigInteger, nullable=False)
     generated_by: Mapped[str] = mapped_column(String(64), nullable=False, default="system")
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow, nullable=False
+    )
 
 
 class SystemSettingOrm(Base):

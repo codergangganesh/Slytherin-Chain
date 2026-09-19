@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
 import json
+from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
 
@@ -13,9 +13,9 @@ def _json_default(obj: Any) -> Any:
     if isinstance(obj, (datetime,)):
         # Normalize to UTC ISO-8601 with trailing Z
         if obj.tzinfo is None:
-            obj = obj.replace(tzinfo=timezone.utc)
+            obj = obj.replace(tzinfo=UTC)
         else:
-            obj = obj.astimezone(timezone.utc)
+            obj = obj.astimezone(UTC)
         return obj.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
     elif isinstance(obj, UUID):
         return str(obj)

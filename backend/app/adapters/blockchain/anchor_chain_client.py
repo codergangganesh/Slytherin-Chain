@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import json
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -11,6 +11,7 @@ try:
     from web3 import AsyncHTTPProvider, AsyncWeb3
 except ImportError:
     from web3 import AsyncWeb3  # type: ignore
+
     AsyncHTTPProvider = getattr(AsyncWeb3, "AsyncHTTPProvider", None)  # type: ignore
 
 from app.config.settings import get_settings
@@ -84,7 +85,13 @@ class AnchorChainClient:
         if not self._contract_address:
             # Simulated transaction in offline dev mode
             import hashlib
-            sim_tx = "0x" + hashlib.sha256(f"{merkle_root}:{from_sequence}:{to_sequence}".encode()).hexdigest()
+
+            sim_tx = (
+                "0x"
+                + hashlib.sha256(
+                    f"{merkle_root}:{from_sequence}:{to_sequence}".encode()
+                ).hexdigest()
+            )
             return AnchoredRootResult(
                 tx_hash=sim_tx,
                 block_number=1,
@@ -96,9 +103,14 @@ class AnchorChainClient:
 
         try:
             account = w3.eth.account.from_key(self._private_key)
-            contract = w3.eth.contract(address=self._contract_address, abi=self._abi)
+            contract = w3.eth.contract(
+                address=AsyncWeb3.to_checksum_address(self._contract_address),
+                abi=self._abi,
+            )
 
-            root_bytes = bytes.fromhex(merkle_root[2:] if merkle_root.startswith("0x") else merkle_root)
+            root_bytes = bytes.fromhex(
+                merkle_root[2:] if merkle_root.startswith("0x") else merkle_root
+            )
 
             nonce = await w3.eth.get_transaction_count(account.address)
             chain_id = self._settings.anchor_chain_id
@@ -107,12 +119,14 @@ class AnchorChainClient:
                 root_bytes,
                 from_sequence,
                 to_sequence,
-            ).build_transaction({
-                "from": account.address,
-                "nonce": nonce,
-                "chainId": chain_id,
-                "gas": 150000,
-            })
+            ).build_transaction(
+                {
+                    "from": account.address,
+                    "nonce": nonce,
+                    "chainId": chain_id,
+                    "gas": 150000,
+                }
+            )
 
             signed_tx = account.sign_transaction(tx)
             tx_hash_bytes = await w3.eth.send_raw_transaction(signed_tx.raw_transaction)

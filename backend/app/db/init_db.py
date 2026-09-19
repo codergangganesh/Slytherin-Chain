@@ -6,20 +6,19 @@ and baseline system settings if the database is freshly provisioned.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
 import uuid
+from datetime import UTC, datetime
 
-from sqlalchemy import select
 import structlog
+from sqlalchemy import select
 
 from app.db.orm_models import (
     ApiKeyOrm,
     AssetOrm,
-    Base,
     SystemSettingOrm,
     UserOrm,
 )
-from app.db.session import get_engine, get_session_factory
+from app.db.session import Base, get_engine, get_session_factory
 from app.domain.enums import AssetEnvironment, UserRole
 from app.services.auth_service import hash_api_key, hash_password
 
@@ -36,8 +35,8 @@ async def init_database() -> None:
             await conn.run_sync(Base.metadata.create_all)
     except Exception as exc:
         logger.warning("primary_database_unavailable_falling_back_to_sqlite", error=str(exc))
-        from app.config.settings import get_settings
         import app.db.session as session_mod
+        from app.config.settings import get_settings
 
         settings = get_settings()
         settings.database_url = "sqlite+aiosqlite:///sentinelchain.db"
@@ -179,7 +178,7 @@ async def init_database() -> None:
                 value="auto",
                 description="System runtime autonomy mode: auto | approval_required | recommend_only | off",
                 updated_by="system",
-                updated_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(UTC),
             )
             session.add(setting)
 

@@ -80,7 +80,12 @@ async def get_incident(
     if not inc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail={"error": {"code": "INCIDENT_NOT_FOUND", "message": f"Incident '{incident_id}' not found"}},
+            detail={
+                "error": {
+                    "code": "INCIDENT_NOT_FOUND",
+                    "message": f"Incident '{incident_id}' not found",
+                }
+            },
         )
 
     breakdown = RiskBreakdownSchema(
@@ -159,7 +164,7 @@ async def transition_incident_state(
     """Perform a manual incident lifecycle transition (Analyst role required)."""
     lifecycle_service = IncidentLifecycleService(session)
     try:
-        updated = await lifecycle_service.transition_incident(
+        await lifecycle_service.transition_incident(
             incident_id=incident_id,
             target_status=payload.target_status,
             user_role=current_user.role,
@@ -175,7 +180,11 @@ async def transition_incident_state(
     return await get_incident(incident_id, session, current_user)
 
 
-@router.post("/{incident_id}/notes", response_model=TimelineEntryResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/{incident_id}/notes",
+    response_model=TimelineEntryResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 async def add_incident_note(
     incident_id: UUID,
     payload: IncidentNoteRequest,

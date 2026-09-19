@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-from typing import Any
 
 from jinja2 import Environment, select_autoescape
 
@@ -109,10 +108,10 @@ class ReportRenderers:
     @staticmethod
     def render_markdown(doc: IncidentReportDocument) -> bytes:
         """Render report to GitHub Flavored Markdown bytes."""
-        md = f"""# SentinelChain Incident Report — {doc.metadata.get('reference_id')}
+        md = f"""# SentinelChain Incident Report — {doc.metadata.get("reference_id")}
 
 **Generated At:** {doc.generated_at}  
-**Status:** {doc.metadata.get('status')} | **Priority:** {doc.metadata.get('priority')} (Risk Score: {doc.metadata.get('risk_score')}/100)
+**Status:** {doc.metadata.get("status")} | **Priority:** {doc.metadata.get("priority")} (Risk Score: {doc.metadata.get("risk_score")}/100)
 
 ---
 
@@ -122,11 +121,11 @@ class ReportRenderers:
 ---
 
 ## 2. Incident Metadata
-- **Title:** {doc.metadata.get('title')}
-- **First Seen:** {doc.metadata.get('first_seen')}
-- **Last Updated:** {doc.metadata.get('last_updated')}
-- **Assigned To:** {doc.metadata.get('assigned_to') or 'Unassigned'}
-- **Duration:** {doc.metadata.get('duration_seconds')} seconds
+- **Title:** {doc.metadata.get("title")}
+- **First Seen:** {doc.metadata.get("first_seen")}
+- **Last Updated:** {doc.metadata.get("last_updated")}
+- **Assigned To:** {doc.metadata.get("assigned_to") or "Unassigned"}
+- **Duration:** {doc.metadata.get("duration_seconds")} seconds
 
 ---
 
@@ -151,7 +150,7 @@ class ReportRenderers:
 ---
 
 ## 5. Affected Assets & Business Impact
-{doc.affected_assets_and_impact.get('business_impact_statement')}
+{doc.affected_assets_and_impact.get("business_impact_statement")}
 
 ---
 
@@ -176,7 +175,7 @@ class ReportRenderers:
 ---
 
 ## 8. Resolution & Recommendations
-**Resolution Notes:** {doc.resolution_and_recommendations.get('resolution_notes')}
+**Resolution Notes:** {doc.resolution_and_recommendations.get("resolution_notes")}
 
 **Follow-up Recommendations:**
 """
@@ -189,11 +188,11 @@ class ReportRenderers:
 
 ## 9. Cryptographic Integrity Attestation
 > [!IMPORTANT]
-> **Verification Status:** **{att.get('verification_status')}**  
-> **Ledger Sequence Range:** #{att.get('ledger_sequence_from')} - #{att.get('ledger_sequence_to')}  
-> **Chain Head Hash:** `{att.get('chain_head_hash')}`  
-> **Merkle Root:** `{att.get('merkle_root')}`  
-> **On-Chain Transaction:** `{att.get('tx_hash') or 'Local Anchor / Pending'}`
+> **Verification Status:** **{att.get("verification_status")}**  
+> **Ledger Sequence Range:** #{att.get("ledger_sequence_from")} - #{att.get("ledger_sequence_to")}  
+> **Chain Head Hash:** `{att.get("chain_head_hash")}`  
+> **Merkle Root:** `{att.get("merkle_root")}`  
+> **On-Chain Transaction:** `{att.get("tx_hash") or "Local Anchor / Pending"}`
 """
         return md.encode("utf-8")
 
@@ -206,6 +205,7 @@ class ReportRenderers:
 
         try:
             from weasyprint import HTML
+
             pdf_bytes = HTML(string=rendered_html).write_pdf()
             return pdf_bytes
         except Exception:

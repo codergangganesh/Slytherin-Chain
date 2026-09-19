@@ -107,7 +107,9 @@ class AssetRepository:
 
         total = await self._session.scalar(count_stmt) or 0
         result = await self._session.execute(
-            stmt.order_by(AssetOrm.criticality.desc(), AssetOrm.hostname.asc()).limit(limit).offset(offset)
+            stmt.order_by(AssetOrm.criticality.desc(), AssetOrm.hostname.asc())
+            .limit(limit)
+            .offset(offset)
         )
         assets = [self._to_domain(orm) for orm in result.scalars().all()]
         return assets, total
@@ -150,4 +152,5 @@ class AssetRepository:
         """Delete an asset by ID."""
         stmt = delete(AssetOrm).where(AssetOrm.id == asset_id)
         result = await self._session.execute(stmt)
-        return (result.rowcount or 0) > 0
+        row_count = getattr(result, "rowcount", 0) or 0
+        return int(row_count) > 0

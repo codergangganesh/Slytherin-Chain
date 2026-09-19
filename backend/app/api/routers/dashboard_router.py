@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
-from typing import Annotated, Any
+from datetime import UTC, datetime, timedelta
+from typing import Annotated
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
@@ -11,7 +11,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependencies import require_viewer
-from app.config.settings import AutonomyMode, get_settings
+from app.config.settings import get_settings
 from app.db.orm_models import (
     IncidentOrm,
     ResponseActionOrm,
@@ -20,7 +20,6 @@ from app.db.orm_models import (
 from app.db.session import get_db_session
 from app.domain.enums import ActionStatus, IncidentPriority, IncidentStatus
 from app.domain.user import User
-from app.repositories.incident_repository import IncidentRepository
 from app.services.integrity.integrity_verification_service import (
     IntegrityVerificationService,
 )
@@ -59,29 +58,51 @@ async def get_dashboard_summary(
     settings = get_settings()
 
     # 1. Open incidents count
-    stmt_open = select(func.count()).select_from(IncidentOrm).where(
-        IncidentOrm.status.notin_([IncidentStatus.RESOLVED, IncidentStatus.CLOSED, IncidentStatus.FALSE_POSITIVE])
+    stmt_open = (
+        select(func.count())
+        .select_from(IncidentOrm)
+        .where(
+            IncidentOrm.status.notin_(
+                [IncidentStatus.RESOLVED, IncidentStatus.CLOSED, IncidentStatus.FALSE_POSITIVE]
+            )
+        )
     )
     open_count = await session.scalar(stmt_open) or 0
 
     # 2. P1 & P2 counts
-    stmt_p1 = select(func.count()).select_from(IncidentOrm).where(
-        IncidentOrm.priority == IncidentPriority.P1,
-        IncidentOrm.status.notin_([IncidentStatus.RESOLVED, IncidentStatus.CLOSED, IncidentStatus.FALSE_POSITIVE]),
+    stmt_p1 = (
+        select(func.count())
+        .select_from(IncidentOrm)
+        .where(
+            IncidentOrm.priority == IncidentPriority.P1,
+            IncidentOrm.status.notin_(
+                [IncidentStatus.RESOLVED, IncidentStatus.CLOSED, IncidentStatus.FALSE_POSITIVE]
+            ),
+        )
     )
     p1_count = await session.scalar(stmt_p1) or 0
 
-    stmt_p2 = select(func.count()).select_from(IncidentOrm).where(
-        IncidentOrm.priority == IncidentPriority.P2,
-        IncidentOrm.status.notin_([IncidentStatus.RESOLVED, IncidentStatus.CLOSED, IncidentStatus.FALSE_POSITIVE]),
+    stmt_p2 = (
+        select(func.count())
+        .select_from(IncidentOrm)
+        .where(
+            IncidentOrm.priority == IncidentPriority.P2,
+            IncidentOrm.status.notin_(
+                [IncidentStatus.RESOLVED, IncidentStatus.CLOSED, IncidentStatus.FALSE_POSITIVE]
+            ),
+        )
     )
     p2_count = await session.scalar(stmt_p2) or 0
 
     # 3. Actions executed today
-    today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
-    stmt_actions = select(func.count()).select_from(ResponseActionOrm).where(
-        ResponseActionOrm.status == ActionStatus.SUCCEEDED,
-        ResponseActionOrm.created_at >= today_start,
+    today_start = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
+    stmt_actions = (
+        select(func.count())
+        .select_from(ResponseActionOrm)
+        .where(
+            ResponseActionOrm.status == ActionStatus.SUCCEEDED,
+            ResponseActionOrm.created_at >= today_start,
+        )
     )
     actions_today = await session.scalar(stmt_actions) or 0
 
@@ -129,7 +150,7 @@ async def get_dashboard_trends(
 ) -> list[DashboardTrendPoint]:
     """Retrieve 7-day incident and response action activity trends."""
     points: list[DashboardTrendPoint] = []
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     for i in range(days - 1, -1, -1):
         day = (now - timedelta(days=i)).strftime("%Y-%m-%d")

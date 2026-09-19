@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -44,8 +44,13 @@ class IncidentLifecycleService:
             notes=notes,
         )
 
-        now = datetime.now(timezone.utc)
-        closed_at = now if target_status in (IncidentStatus.RESOLVED, IncidentStatus.CLOSED, IncidentStatus.FALSE_POSITIVE) else None
+        now = datetime.now(UTC)
+        closed_at = (
+            now
+            if target_status
+            in (IncidentStatus.RESOLVED, IncidentStatus.CLOSED, IncidentStatus.FALSE_POSITIVE)
+            else None
+        )
 
         updated = await self._repo.update_incident(
             incident_id=incident_id,
@@ -61,7 +66,11 @@ class IncidentLifecycleService:
             title=f"Status changed to {target_status.value}",
             description=f"Transitioned from {incident.status.value} to {target_status.value}. Notes: {notes or 'None'}",
             actor=f"user:{actor_username}",
-            metadata={"old_status": incident.status.value, "new_status": target_status.value, "notes": notes},
+            metadata={
+                "old_status": incident.status.value,
+                "new_status": target_status.value,
+                "notes": notes,
+            },
         )
 
         # Append to audit ledger

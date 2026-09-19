@@ -7,7 +7,6 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.domain.asset import Asset
 from app.domain.enums import AssetEnvironment
 from app.repositories.asset_repository import AssetRepository
 

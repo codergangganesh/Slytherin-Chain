@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import UUID
 
@@ -28,7 +28,9 @@ class ResponseActionRepository:
                 guardrail_name=d.get("guardrail_name", ""),
                 passed=bool(d.get("passed", False)),
                 reason=d.get("reason", ""),
-                evaluated_at=datetime.fromisoformat(d.get("evaluated_at", datetime.now(timezone.utc).isoformat())),
+                evaluated_at=datetime.fromisoformat(
+                    d.get("evaluated_at", datetime.now(UTC).isoformat())
+                ),
             )
             for d in (orm.guardrail_decisions or [])
         ]
@@ -82,7 +84,7 @@ class ResponseActionRepository:
         denial_reason: str | None = None,
     ) -> ResponseAction:
         """Create and persist a response action."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         expires_at = now + timedelta(seconds=ttl_seconds) if ttl_seconds else None
 
         orm = ResponseActionOrm(
@@ -142,10 +144,14 @@ class ResponseActionRepository:
 
     async def count_actions_in_window(self, hours: int = 1, target_type: str | None = None) -> int:
         """Count executed actions in the last N hours for blast radius checking."""
-        cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
-        stmt = select(func.count()).select_from(ResponseActionOrm).where(
-            ResponseActionOrm.status.in_([ActionStatus.SUCCEEDED, ActionStatus.EXECUTING]),
-            ResponseActionOrm.created_at >= cutoff,
+        cutoff = datetime.now(UTC) - timedelta(hours=hours)
+        stmt = (
+            select(func.count())
+            .select_from(ResponseActionOrm)
+            .where(
+                ResponseActionOrm.status.in_([ActionStatus.SUCCEEDED, ActionStatus.EXECUTING]),
+                ResponseActionOrm.created_at >= cutoff,
+            )
         )
         if target_type:
             stmt = stmt.where(ResponseActionOrm.action_type == target_type)
@@ -183,7 +189,7 @@ class ResponseActionRepository:
 
     async def list_expired_actions(self) -> list[ResponseAction]:
         """List active actions whose TTL has expired."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         stmt = (
             select(ResponseActionOrm)
             .where(

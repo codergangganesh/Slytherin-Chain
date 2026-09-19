@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-import asyncio
-from pathlib import Path
 import sys
-from typing import Annotated, Any
+from pathlib import Path
+from typing import Annotated
 
 # Ensure repository root is in sys.path
 _REPO_ROOT = str(Path(__file__).resolve().parents[4])
@@ -14,6 +13,7 @@ if _REPO_ROOT not in sys.path:
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
+from simulator.run_scenario import load_scenario
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependencies import require_viewer
@@ -21,13 +21,10 @@ from app.db.session import get_db_session
 from app.domain.user import User
 from app.repositories.event_repository import EventRepository
 from app.services.detection.detection_service import DetectionService
-from app.services.enrichment.asset_context_service import AssetContextService
-from app.services.enrichment.threat_intel_service import ThreatIntelService
 from app.services.incident_correlation_service import IncidentCorrelationService
 from app.services.ingestion.event_normalizer import EventNormalizer
 from app.services.ingestion.event_publisher import EventPublisher
 from app.services.response.response_orchestrator import ResponseOrchestrator
-from simulator.run_scenario import load_scenario
 
 router = APIRouter(prefix="/simulator", tags=["Attack Simulator"])
 
@@ -117,7 +114,12 @@ async def run_scenario_endpoint(
     if scenario_name not in valid_names:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail={"error": {"code": "SCENARIO_NOT_FOUND", "message": f"Scenario '{scenario_name}' not found"}},
+            detail={
+                "error": {
+                    "code": "SCENARIO_NOT_FOUND",
+                    "message": f"Scenario '{scenario_name}' not found",
+                }
+            },
         )
 
     raw_events = load_scenario(scenario_name)

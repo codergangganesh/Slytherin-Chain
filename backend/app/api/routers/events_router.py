@@ -27,7 +27,12 @@ router = APIRouter(prefix="/events", tags=["Events"])
 
 
 @router.post("", response_model=IngestResponse, status_code=status.HTTP_202_ACCEPTED)
-@router.post("/", response_model=IngestResponse, status_code=status.HTTP_202_ACCEPTED, include_in_schema=False)
+@router.post(
+    "/",
+    response_model=IngestResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+    include_in_schema=False,
+)
 async def ingest_single_event(
     payload: EventIngestRequest,
     session: Annotated[AsyncSession, Depends(get_db_session)],
@@ -59,8 +64,7 @@ async def ingest_batch_events(
     """Ingest a batch of up to 500 security events (authenticated via X-API-Key)."""
     normalizer = EventNormalizer()
     normalized_events = [
-        normalizer.normalize(item.model_dump(exclude_unset=True))
-        for item in payload.events
+        normalizer.normalize(item.model_dump(exclude_unset=True)) for item in payload.events
     ]
 
     repo = EventRepository(session)

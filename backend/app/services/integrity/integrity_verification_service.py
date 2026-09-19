@@ -108,7 +108,9 @@ class IntegrityVerificationService:
         batches = res_batches.scalars().all()
 
         for batch in batches:
-            batch_entries = [e for e in entries if batch.from_sequence <= e.sequence_number <= batch.to_sequence]
+            batch_entries = [
+                e for e in entries if batch.from_sequence <= e.sequence_number <= batch.to_sequence
+            ]
             if not batch_entries:
                 continue
 

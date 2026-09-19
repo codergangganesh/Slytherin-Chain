@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
-import uuid
 
-from sqlalchemy import delete, func, select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from app.db.orm_models import AlertOrm, IncidentAlertOrm, IncidentOrm, TimelineEntryOrm
 from app.domain.enums import IncidentPriority, IncidentStatus
@@ -85,7 +83,7 @@ class IncidentRepository:
 
     async def generate_reference_id(self) -> str:
         """Generate a consecutive reference ID like INC-2026-0001."""
-        year = datetime.now(timezone.utc).year
+        year = datetime.now(UTC).year
         count_stmt = select(func.count()).select_from(IncidentOrm)
         count = await self._session.scalar(count_stmt) or 0
         return f"INC-{year}-{count + 1:04d}"
@@ -143,7 +141,9 @@ class IncidentRepository:
     ) -> Incident | None:
         """Find an open incident matching any of the primary keys within the window."""
         stmt = select(IncidentOrm).where(
-            IncidentOrm.status.notin_([IncidentStatus.RESOLVED, IncidentStatus.CLOSED, IncidentStatus.FALSE_POSITIVE]),
+            IncidentOrm.status.notin_(
+                [IncidentStatus.RESOLVED, IncidentStatus.CLOSED, IncidentStatus.FALSE_POSITIVE]
+            ),
             IncidentOrm.created_at >= correlation_cutoff,
         )
         if src_ip:

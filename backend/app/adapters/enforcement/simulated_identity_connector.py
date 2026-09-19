@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
 
@@ -48,7 +48,7 @@ class SimulatedIdentityConnector(EnforcementConnector):
         parameters: dict[str, Any],
         ttl_seconds: int | None = None,
     ) -> dict[str, Any]:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         action_type = str(parameters.get("action_type", "isolate_host"))
 
         if action_type == ActionType.ISOLATE_HOST.value:
@@ -71,8 +71,8 @@ class SimulatedIdentityConnector(EnforcementConnector):
                 self._session.add(orm)
 
         elif action_type in (ActionType.DISABLE_USER.value, ActionType.RESTRICT_ACCESS.value):
-            stmt = select(DisabledUserOrm).where(DisabledUserOrm.username == target)
-            res = await self._session.execute(stmt)
+            user_stmt = select(DisabledUserOrm).where(DisabledUserOrm.username == target)
+            res = await self._session.execute(user_stmt)
             existing_user = res.scalar_one_or_none()
             if existing_user:
                 existing_user.is_active = True

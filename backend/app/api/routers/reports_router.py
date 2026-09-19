@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
 import hashlib
+import uuid
+from datetime import UTC, datetime
 from typing import Annotated
 from uuid import UUID
-import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from pydantic import BaseModel
@@ -38,7 +38,11 @@ class GenerateReportResponse(BaseModel):
     download_url: str
 
 
-@router.post("/incidents/{incident_id}", response_model=GenerateReportResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/incidents/{incident_id}",
+    response_model=GenerateReportResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 async def generate_incident_report(
     incident_id: UUID,
     session: Annotated[AsyncSession, Depends(get_db_session)],
@@ -65,7 +69,7 @@ async def generate_incident_report(
     file_hash = hashlib.sha256(data).hexdigest()
     file_size = len(data)
     report_id = uuid.uuid4()
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     # Store in object store
     store = MinioObjectStore()
@@ -127,7 +131,9 @@ async def download_report(
     if not orm:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail={"error": {"code": "REPORT_NOT_FOUND", "message": f"Report '{report_id}' not found"}},
+            detail={
+                "error": {"code": "REPORT_NOT_FOUND", "message": f"Report '{report_id}' not found"}
+            },
         )
 
     parts = orm.storage_path.split("/", 1)

@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 import json
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -24,7 +24,9 @@ class OfflineThreatIntelProvider:
     def __init__(self, data_file: Path | None = None) -> None:
         self._data_file = (
             data_file
-            or Path(__file__).resolve().parent.parent.parent.parent / "data" / "offline_threat_intel.json"
+            or Path(__file__).resolve().parent.parent.parent.parent
+            / "data"
+            / "offline_threat_intel.json"
         )
         self._data: dict[str, Any] = self._load_data()
 

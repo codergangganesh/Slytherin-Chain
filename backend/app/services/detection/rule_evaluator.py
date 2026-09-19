@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import re
-from typing import Any
 import uuid
+from typing import Any
 
 from app.domain.alert import Alert, MitreAttackMapping
 from app.domain.enums import RuleType

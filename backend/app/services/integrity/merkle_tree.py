@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import hashlib
+from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
@@ -50,7 +50,9 @@ class MerkleTree:
     @classmethod
     def _hash_leaf(cls, entry_hash: str) -> str:
         """Hash leaf with domain prefix 0x00."""
-        raw_bytes = bytes.fromhex(entry_hash) if len(entry_hash) == 64 else entry_hash.encode("utf-8")
+        raw_bytes = (
+            bytes.fromhex(entry_hash) if len(entry_hash) == 64 else entry_hash.encode("utf-8")
+        )
         return hashlib.sha256(cls.LEAF_PREFIX + raw_bytes).hexdigest()
 
     @classmethod
@@ -98,7 +100,7 @@ class MerkleTree:
         idx = leaf_index
 
         for layer in self._layers[:-1]:
-            is_odd = (idx % 2 == 1)
+            is_odd = idx % 2 == 1
             pair_idx = idx - 1 if is_odd else idx + 1
             if pair_idx < len(layer):
                 pos = "left" if is_odd else "right"

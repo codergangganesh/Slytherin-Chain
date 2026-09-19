@@ -67,9 +67,11 @@ export const DashboardPage: React.FC = () => {
           </div>
           <button
             onClick={fetchDashboardData}
+            disabled={loading}
             className="p-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-lg text-slate-300 transition-colors"
+            title="Refresh dashboard data"
           >
-            <RefreshCw className="w-4 h-4" />
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-blue-400" : ""}`} />
           </button>
         </div>
       </div>

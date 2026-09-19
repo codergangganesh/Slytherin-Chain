@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator, Callable
+from collections.abc import Callable
 from typing import Annotated
 from uuid import UUID
 
@@ -29,7 +29,9 @@ async def get_current_user(
     if credentials is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={"error": {"code": "AUTHENTICATION_REQUIRED", "message": "Missing Bearer token"}},
+            detail={
+                "error": {"code": "AUTHENTICATION_REQUIRED", "message": "Missing Bearer token"}
+            },
             headers={"WWW-Authenticate": "Bearer"},
         )
 
@@ -107,6 +109,8 @@ async def verify_ingestion_api_key(
         if provided_hash != expected_hash:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail={"error": {"code": "INVALID_API_KEY", "message": "Invalid ingestion API key"}},
+                detail={
+                    "error": {"code": "INVALID_API_KEY", "message": "Invalid ingestion API key"}
+                },
             )
     return x_api_key

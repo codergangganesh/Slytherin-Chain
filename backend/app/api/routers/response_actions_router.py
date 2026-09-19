@@ -133,7 +133,9 @@ async def rollback_response_action(
     """Revert a previously executed response action with reason (Analyst role)."""
     orchestrator = ResponseOrchestrator(session)
     try:
-        updated = await orchestrator.rollback_action(action_id, current_user.username, payload.reason)
+        updated = await orchestrator.rollback_action(
+            action_id, current_user.username, payload.reason
+        )
         return _to_response_schema(updated)
     except EntityNotFoundError as err:
         raise HTTPException(

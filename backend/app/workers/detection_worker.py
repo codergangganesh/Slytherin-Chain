@@ -78,7 +78,7 @@ class DetectionWorker:
         while self._running:
             try:
                 # Read new messages from stream
-                messages = await redis_client.xreadgroup(
+                messages: Any = await redis_client.xreadgroup(
                     group_name,
                     consumer_name,
                     {stream_name: ">"},
@@ -129,4 +129,3 @@ if __name__ == "__main__":
         asyncio.run(worker.run())
     except KeyboardInterrupt:
         worker.stop()
-

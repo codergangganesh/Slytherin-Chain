@@ -6,9 +6,9 @@ into the standard ECS-aligned NormalizedEvent domain model.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from typing import Any
 import uuid
+from datetime import UTC, datetime
+from typing import Any
 
 from app.domain.enums import EventSource, EventType
 from app.domain.normalized_event import NormalizedEvent
@@ -27,7 +27,7 @@ class EventNormalizer:
         Returns:
             NormalizedEvent: Strongly-typed normalized domain entity.
         """
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         # Parse event_id or generate a new UUID
         raw_id = raw_payload.get("event_id")
@@ -40,7 +40,9 @@ class EventNormalizer:
                 occurred_at = occurred_at_raw
             else:
                 try:
-                    occurred_at = datetime.fromisoformat(str(occurred_at_raw).replace("Z", "+00:00"))
+                    occurred_at = datetime.fromisoformat(
+                        str(occurred_at_raw).replace("Z", "+00:00")
+                    )
                 except ValueError:
                     occurred_at = now
         else:
@@ -76,7 +78,7 @@ class EventNormalizer:
         command_line = raw_payload.get("command_line")
         file_path = raw_payload.get("file_path")
         file_hash_sha256 = raw_payload.get("file_hash_sha256")
-        
+
         bytes_out = raw_payload.get("bytes_out")
         if bytes_out is not None:
             try:
@@ -92,7 +94,9 @@ class EventNormalizer:
             except (ValueError, TypeError):
                 severity_hint = None
 
-        raw_data = raw_payload.get("raw") if isinstance(raw_payload.get("raw"), dict) else raw_payload
+        raw_data = (
+            raw_payload.get("raw") if isinstance(raw_payload.get("raw"), dict) else raw_payload
+        )
 
         return NormalizedEvent(
             event_id=event_id,
@@ -112,5 +116,5 @@ class EventNormalizer:
             bytes_out=bytes_out,
             http_path=str(http_path) if http_path else None,
             severity_hint=severity_hint,
-            raw=raw_data,
+            raw=dict(raw_data) if isinstance(raw_data, dict) else dict(raw_payload),
         )

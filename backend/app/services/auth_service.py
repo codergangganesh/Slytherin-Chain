@@ -5,9 +5,9 @@ Implements Argon2 password hashing and JWT token generation & verification.
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
-from typing import Any
 import hashlib
+from datetime import UTC, datetime, timedelta
+from typing import Any
 from uuid import UUID
 
 from argon2 import PasswordHasher
@@ -51,9 +51,9 @@ def create_access_token(
     """Create a signed JWT access token."""
     settings = get_settings()
     if expires_delta:
-        expire = datetime.now(timezone.utc) + expires_delta
+        expire = datetime.now(UTC) + expires_delta
     else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=settings.access_token_expire_minutes)
+        expire = datetime.now(UTC) + timedelta(minutes=settings.access_token_expire_minutes)
 
     payload: dict[str, Any] = {
         "sub": str(user_id),
@@ -74,9 +74,9 @@ def create_refresh_token(
     """Create a signed JWT refresh token."""
     settings = get_settings()
     if expires_delta:
-        expire = datetime.now(timezone.utc) + expires_delta
+        expire = datetime.now(UTC) + expires_delta
     else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=settings.refresh_token_expire_minutes)
+        expire = datetime.now(UTC) + timedelta(minutes=settings.refresh_token_expire_minutes)
 
     payload: dict[str, Any] = {
         "sub": str(user_id),
@@ -95,7 +95,9 @@ def decode_token(token: str, expected_type: str = "access") -> dict[str, Any]:
         payload = jwt.decode(token, settings.secret_key, algorithms=[ALGORITHM])
         token_type = payload.get("type")
         if token_type != expected_type:
-            raise AuthenticationError(f"Invalid token type: expected {expected_type}, got {token_type}")
+            raise AuthenticationError(
+                f"Invalid token type: expected {expected_type}, got {token_type}"
+            )
         return payload
     except JWTError as err:
         raise AuthenticationError(f"Invalid or expired token: {err}") from err

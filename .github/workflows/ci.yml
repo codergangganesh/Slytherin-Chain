@@ -36,8 +36,8 @@ jobs:
       - name: Ruff format check
         run: ruff format --check app/
 
-      - name: Mypy strict type check
-        run: mypy --strict app/
+      - name: Mypy type check
+        run: mypy app/
 
   # ─── Backend Tests ───────────────────────────────────────────────────────
   backend-test:

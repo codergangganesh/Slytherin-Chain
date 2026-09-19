@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import datetime, timezone
 import hashlib
-from uuid import UUID
 import uuid
+from dataclasses import dataclass
+from datetime import UTC, datetime
+from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -58,7 +58,7 @@ class EvidenceStorageService:
         file_hash = hashlib.sha256(data).hexdigest()
         file_size = len(data)
         item_id = uuid.uuid4()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         object_name = f"{incident_id}/{item_id}_{filename}"
         storage_path = await self._store.put_object(
@@ -108,7 +108,9 @@ class EvidenceStorageService:
             created_at=now,
         )
 
-    async def get_evidence_data_and_verify(self, evidence_id: UUID) -> tuple[bytes, bool, EvidenceItem | None]:
+    async def get_evidence_data_and_verify(
+        self, evidence_id: UUID
+    ) -> tuple[bytes, bool, EvidenceItem | None]:
         """Retrieve evidence bytes and verify against stored SHA-256 hash."""
         stmt = select(EvidenceItemOrm).where(EvidenceItemOrm.id == evidence_id)
         res = await self._session.execute(stmt)
@@ -122,7 +124,7 @@ class EvidenceStorageService:
 
         data = await self._store.get_object(bucket, obj_name)
         recomputed_hash = hashlib.sha256(data).hexdigest()
-        is_valid = (recomputed_hash.lower() == orm.file_hash_sha256.lower())
+        is_valid = recomputed_hash.lower() == orm.file_hash_sha256.lower()
 
         item = EvidenceItem(
             id=orm.id,

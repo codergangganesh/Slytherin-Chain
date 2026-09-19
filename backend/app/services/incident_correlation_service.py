@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
-from uuid import UUID
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config.settings import get_settings
 from app.domain.alert import Alert
-from app.domain.enums import EntryType, IncidentPriority, IncidentStatus
+from app.domain.enums import EntryType, IncidentStatus
 from app.domain.incident import Incident
 from app.repositories.alert_repository import AlertRepository
 from app.repositories.incident_repository import IncidentRepository
@@ -48,8 +47,16 @@ class IncidentCorrelationService:
         """
         # Determine correlation targets
         src_ip = alert.group_by_key if "." in alert.group_by_key else None
-        host = alert.group_by_key if ("." not in alert.group_by_key and not alert.group_by_key.startswith("user:")) else None
-        username = alert.group_by_key.replace("user:", "") if alert.group_by_key.startswith("user:") else None
+        host = (
+            alert.group_by_key
+            if ("." not in alert.group_by_key and not alert.group_by_key.startswith("user:"))
+            else None
+        )
+        username = (
+            alert.group_by_key.replace("user:", "")
+            if alert.group_by_key.startswith("user:")
+            else None
+        )
 
         # Gather Enrichment Context
         intel_rep = 0.1
@@ -60,7 +67,7 @@ class IncidentCorrelationService:
         asset_ctx = await self._asset_context.get_context_by_host(host)
 
         # Check correlation window
-        cutoff = datetime.now(timezone.utc) - timedelta(seconds=self._settings.correlation_window_seconds)
+        cutoff = datetime.now(UTC) - timedelta(seconds=self._settings.correlation_window_seconds)
         existing = await self._incident_repo.find_open_incident_by_correlation_key(
             src_ip=src_ip,
             host=host,
@@ -86,7 +93,12 @@ class IncidentCorrelationService:
 
             # Accumulate tactics and techniques
             tactics = list(set(existing.mitre_tactics + [alert.mitre.tactic]))
-            techniques = list(set(existing.mitre_techniques + [f"{alert.mitre.technique_id} - {alert.mitre.technique_name}"]))
+            techniques = list(
+                set(
+                    existing.mitre_techniques
+                    + [f"{alert.mitre.technique_id} - {alert.mitre.technique_name}"]
+                )
+            )
 
             updated_incident = await self._incident_repo.update_incident(
                 incident_id=existing.id,
@@ -121,7 +133,11 @@ class IncidentCorrelationService:
                 actor="detection_engine",
                 mitre_tactic=alert.mitre.tactic,
                 mitre_technique=alert.mitre.technique_id,
-                metadata={"alert_id": str(alert.id), "rule_id": alert.rule_id, "risk_score": score_res.score},
+                metadata={
+                    "alert_id": str(alert.id),
+                    "rule_id": alert.rule_id,
+                    "risk_score": score_res.score,
+                },
             )
 
             # Append to audit ledger
@@ -133,7 +149,11 @@ class IncidentCorrelationService:
             await self._ledger.append_entry(
                 entry_type=EntryType.SCORE_CHANGED,
                 incident_id=existing.id,
-                payload={"old_score": existing.risk_score, "new_score": score_res.score, "priority": score_res.priority.value},
+                payload={
+                    "old_score": existing.risk_score,
+                    "new_score": score_res.score,
+                    "priority": score_res.priority.value,
+                },
             )
 
             assert updated_incident is not None
@@ -194,7 +214,11 @@ class IncidentCorrelationService:
                 actor="detection_engine",
                 mitre_tactic=alert.mitre.tactic,
                 mitre_technique=alert.mitre.technique_id,
-                metadata={"alert_id": str(alert.id), "rule_id": alert.rule_id, "initial_score": score_res.score},
+                metadata={
+                    "alert_id": str(alert.id),
+                    "rule_id": alert.rule_id,
+                    "initial_score": score_res.score,
+                },
             )
 
             # Append to audit ledger

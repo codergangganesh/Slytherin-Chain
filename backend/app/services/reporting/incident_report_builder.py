@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
 
@@ -78,7 +78,7 @@ class IncidentReportBuilder:
         if not incident:
             raise EntityNotFoundError("Incident", str(incident_id))
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         alerts = await self._alert_repo.list_alerts_by_incident(incident_id)
         timeline = await self._incident_repo.list_timeline(incident_id)
 
@@ -196,20 +196,24 @@ class IncidentReportBuilder:
         for aid in incident.affected_asset_ids:
             asset = await self._asset_repo.get_by_id(aid)
             if asset:
-                assets_info.append({
-                    "id": str(asset.id),
-                    "hostname": asset.hostname,
-                    "ip_address": asset.ip_address,
-                    "criticality": asset.criticality,
-                    "environment": asset.environment.value,
-                    "is_protected": asset.is_protected,
-                    "is_internet_facing": asset.is_internet_facing,
-                    "owner": asset.owner,
-                })
+                assets_info.append(
+                    {
+                        "id": str(asset.id),
+                        "hostname": asset.hostname,
+                        "ip_address": asset.ip_address,
+                        "criticality": asset.criticality,
+                        "environment": asset.environment.value,
+                        "is_protected": asset.is_protected,
+                        "is_internet_facing": asset.is_internet_facing,
+                        "owner": asset.owner,
+                    }
+                )
 
         business_impact = "Low operational impact; suspicious activity contained."
         if incident.risk_score >= 80:
-            business_impact = "Severe potential impact to enterprise assets; high priority containment enforced."
+            business_impact = (
+                "Severe potential impact to enterprise assets; high priority containment enforced."
+            )
         elif incident.risk_score >= 60:
             business_impact = "Elevated threat impact; containment or isolation active."
 
@@ -269,7 +273,9 @@ class IncidentReportBuilder:
             "ledger_sequence_from": seq_from,
             "ledger_sequence_to": seq_to,
             "chain_head_hash": verif_status.chain_head_hash,
-            "merkle_root": latest_batch.merkle_root if latest_batch else "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "merkle_root": latest_batch.merkle_root
+            if latest_batch
+            else "0x0000000000000000000000000000000000000000000000000000000000000000",
             "tx_hash": latest_batch.tx_hash if latest_batch else None,
             "block_number": latest_batch.block_number if latest_batch else None,
             "verification_status": verif_status.status.value,

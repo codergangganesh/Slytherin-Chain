@@ -72,8 +72,8 @@ class EventPublisher:
                 return ""
             stream_name = self._settings.redis_stream_events
             fields = self._serialize_event(event)
-            message_id: str = await client.xadd(stream_name, fields)
-            return message_id
+            raw_id = await client.xadd(stream_name, fields)  # type: ignore[arg-type]
+            return str(raw_id.decode() if isinstance(raw_id, bytes) else raw_id)
         except Exception:
             # Safe degradation if Redis is unavailable during testing
             EventPublisher._redis_available = False

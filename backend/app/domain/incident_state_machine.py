@@ -80,8 +80,14 @@ def validate_state_transition(
     # Validate permissions for manual actions
     if not is_automated:
         if user_role is None or user_role not in ROLES_ALLOWED_MANUAL_TRANSITION:
-            raise AuthorizationError("Only analysts or admins can perform manual state transitions.")
-        if target_status in (IncidentStatus.RESOLVED, IncidentStatus.CLOSED, IncidentStatus.FALSE_POSITIVE):
+            raise AuthorizationError(
+                "Only analysts or admins can perform manual state transitions."
+            )
+        if target_status in (
+            IncidentStatus.RESOLVED,
+            IncidentStatus.CLOSED,
+            IncidentStatus.FALSE_POSITIVE,
+        ):
             if not notes or not notes.strip():
                 raise InvalidStateTransitionError(
                     from_state=current_status.value,

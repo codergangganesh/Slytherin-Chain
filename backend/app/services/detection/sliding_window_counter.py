@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 from collections import defaultdict
-import time
-from typing import Any
 
 import redis.asyncio as aioredis
 
@@ -77,7 +75,8 @@ class SlidingWindowCounter:
                 distinct_set: set[str] = set()
 
                 for entry in entries:
-                    parts = entry.split(":", 1)
+                    entry_str = entry.decode("utf-8") if isinstance(entry, bytes) else str(entry)
+                    parts = entry_str.split(":", 1)
                     val = parts[0]
                     eid = parts[1] if len(parts) > 1 else parts[0]
                     distinct_set.add(val)
@@ -124,7 +123,8 @@ class SlidingWindowCounter:
                 entries = await client.zrangebyscore(key, cutoff, "+inf")
                 steps_found: dict[int, str] = {}
                 for entry in entries:
-                    parts = entry.split(":", 1)
+                    entry_str = entry.decode("utf-8") if isinstance(entry, bytes) else str(entry)
+                    parts = entry_str.split(":", 1)
                     s_idx = int(parts[0])
                     eid = parts[1]
                     steps_found[s_idx] = eid

@@ -32,6 +32,7 @@ _session_factory: async_sessionmaker[AsyncSession] | None = None
 from sqlalchemy import event
 from sqlalchemy.pool import NullPool, QueuePool
 
+
 def get_engine() -> AsyncEngine:
     """Retrieve or lazily initialize the AsyncEngine instance."""
     global _engine
@@ -52,6 +53,7 @@ def get_engine() -> AsyncEngine:
         )
 
         if is_sqlite:
+
             @event.listens_for(_engine.sync_engine, "connect")
             def set_sqlite_pragma(dbapi_connection: Any, connection_record: Any) -> None:
                 cursor = dbapi_connection.cursor()

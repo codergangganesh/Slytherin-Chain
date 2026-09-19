@@ -17,7 +17,6 @@ from app.api.schemas.auth_schemas import (
 )
 from app.config.settings import get_settings
 from app.db.session import get_db_session
-from app.domain.enums import UserRole
 from app.domain.user import User
 from app.repositories.user_repository import UserRepository
 from app.services.auth_service import (
@@ -43,7 +42,9 @@ async def login(
     if not user or not user.is_active or not verify_password(payload.password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={"error": {"code": "INVALID_CREDENTIALS", "message": "Invalid username or password"}},
+            detail={
+                "error": {"code": "INVALID_CREDENTIALS", "message": "Invalid username or password"}
+            },
         )
 
     access_token = create_access_token(user.id, user.username, user.role)
@@ -73,7 +74,12 @@ async def refresh_token(
     except Exception as err:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={"error": {"code": "INVALID_REFRESH_TOKEN", "message": "Refresh token is invalid or expired"}},
+            detail={
+                "error": {
+                    "code": "INVALID_REFRESH_TOKEN",
+                    "message": "Refresh token is invalid or expired",
+                }
+            },
         ) from err
 
     user_repo = UserRepository(session)

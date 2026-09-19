@@ -54,4 +54,3 @@ if __name__ == "__main__":
         asyncio.run(worker.run())
     except KeyboardInterrupt:
         worker.stop()
-

@@ -27,12 +27,22 @@ class ExecutiveSummaryGenerator:
     ) -> str:
         """Generate a clean, deterministic template-based executive summary."""
         tactic_str = ", ".join(tactics) if tactics else "Unclassified activity"
-        attacker_str = f"originating from {primary_attacker}" if primary_attacker else "from an unconfirmed source"
-        target_str = f"targeting {primary_target}" if primary_target else "impacting monitored systems"
+        attacker_str = (
+            f"originating from {primary_attacker}"
+            if primary_attacker
+            else "from an unconfirmed source"
+        )
+        target_str = (
+            f"targeting {primary_target}" if primary_target else "impacting monitored systems"
+        )
 
         action_summary = "No active containment was required."
         if actions_taken:
-            exec_actions = [f"{a.get('action_type')} on {a.get('target')}" for a in actions_taken if a.get("status") == "SUCCEEDED"]
+            exec_actions = [
+                f"{a.get('action_type')} on {a.get('target')}"
+                for a in actions_taken
+                if a.get("status") == "SUCCEEDED"
+            ]
             if exec_actions:
                 action_summary = f"Autonomous and approved containment actions executed: {'; '.join(exec_actions)}."
             else:

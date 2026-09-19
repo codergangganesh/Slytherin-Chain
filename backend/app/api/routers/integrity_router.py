@@ -68,7 +68,9 @@ async def trigger_deep_verification(
 
 
 @router.get("/entries", response_model=PaginatedResponse[AuditLedgerEntryResponse])
-@router.get("/ledger", response_model=PaginatedResponse[AuditLedgerEntryResponse], include_in_schema=False)
+@router.get(
+    "/ledger", response_model=PaginatedResponse[AuditLedgerEntryResponse], include_in_schema=False
+)
 async def list_ledger_entries(
     session: Annotated[AsyncSession, Depends(get_db_session)],
     _: Annotated[User, Depends(require_viewer)],
@@ -107,7 +109,12 @@ async def get_entry_merkle_proof(
     if not proof:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail={"error": {"code": "PROOF_NOT_AVAILABLE", "message": f"Entry #{sequence_number} not anchored yet"}},
+            detail={
+                "error": {
+                    "code": "PROOF_NOT_AVAILABLE",
+                    "message": f"Entry #{sequence_number} not anchored yet",
+                }
+            },
         )
 
     return MerkleProofResponse(
@@ -163,7 +170,12 @@ async def trigger_manual_anchor(
     if not batch:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail={"error": {"code": "NO_UNANCHORED_ENTRIES", "message": "No unanchored ledger entries available"}},
+            detail={
+                "error": {
+                    "code": "NO_UNANCHORED_ENTRIES",
+                    "message": "No unanchored ledger entries available",
+                }
+            },
         )
 
     return AnchorBatchResponse(

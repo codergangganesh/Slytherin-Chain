@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import UUID
-import uuid
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -94,7 +93,7 @@ class AnchorBatchRepository:
         orm.tx_hash = tx_hash
         orm.block_number = block_number
         orm.contract_address = contract_address
-        orm.anchored_at = datetime.now(timezone.utc)
+        orm.anchored_at = datetime.now(UTC)
         await self._session.flush()
         await self._session.refresh(orm)
         return self._to_domain(orm)

@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
 import hashlib
+from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.orm_models import AuditLedgerEntryOrm
@@ -61,7 +60,7 @@ class HashChainLedger:
         Executes within the existing transaction, acquiring the next sequence number
         and chaining onto the latest hash.
         """
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         # Get latest entry to obtain previous hash and next sequence number
         latest = await self._repo.get_latest_entry()

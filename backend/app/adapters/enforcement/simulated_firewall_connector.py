@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import delete, select, update
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.adapters.enforcement.enforcement_connector import EnforcementConnector
@@ -44,7 +44,7 @@ class SimulatedFirewallConnector(EnforcementConnector):
         parameters: dict[str, Any],
         ttl_seconds: int | None = None,
     ) -> dict[str, Any]:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         expires_at = now + timedelta(seconds=ttl_seconds) if ttl_seconds else None
 
         stmt = select(BlocklistEntryOrm).where(BlocklistEntryOrm.ip_address == target)

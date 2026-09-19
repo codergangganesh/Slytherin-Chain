@@ -80,7 +80,9 @@ class ApiClient {
         } else if (errJson.detail) {
           errMessage = typeof errJson.detail === "string" ? errJson.detail : JSON.stringify(errJson.detail);
         }
-      } catch {}
+      } catch {
+        // Response body was not valid JSON, use status text fallback
+      }
       throw new Error(errMessage);
     }
 

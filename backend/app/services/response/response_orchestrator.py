@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 from uuid import UUID
@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.adapters.enforcement.simulated_firewall_connector import SimulatedFirewallConnector
 from app.adapters.enforcement.simulated_identity_connector import SimulatedIdentityConnector
 from app.domain.enums import ActionStatus, ActionType, EntryType, IncidentStatus
-from app.domain.exceptions import EntityNotFoundError, GuardrailViolationError
+from app.domain.exceptions import EntityNotFoundError
 from app.domain.incident import Incident
 from app.domain.response_action import ResponseAction
 from app.repositories.asset_repository import AssetRepository
@@ -105,7 +105,10 @@ class ResponseOrchestrator:
                         action_type=action_cfg.action_type,
                         target=target,
                         idempotency_key=idempotency_key,
-                        parameters={"action_type": action_cfg.action_type.value, "reason": "Playbook policy"},
+                        parameters={
+                            "action_type": action_cfg.action_type.value,
+                            "reason": "Playbook policy",
+                        },
                         guardrail_decisions=guardrail_res.decisions,
                         status=ActionStatus.DENIED,
                         denial_reason=guardrail_res.denial_reason,
@@ -116,12 +119,19 @@ class ResponseOrchestrator:
                         title=f"Response Action Denied: {action_cfg.action_type.value} on {target}",
                         description=f"Action denied by guardrails: {guardrail_res.denial_reason}",
                         actor="guardrail_engine",
-                        metadata={"action_id": str(action.id), "reason": guardrail_res.denial_reason},
+                        metadata={
+                            "action_id": str(action.id),
+                            "reason": guardrail_res.denial_reason,
+                        },
                     )
                     await self._ledger.append_entry(
                         entry_type=EntryType.ACTION_DENIED,
                         incident_id=incident.id,
-                        payload={"action_type": action_cfg.action_type.value, "target": target, "reason": guardrail_res.denial_reason},
+                        payload={
+                            "action_type": action_cfg.action_type.value,
+                            "target": target,
+                            "reason": guardrail_res.denial_reason,
+                        },
                     )
                     actions_taken.append(action)
                     continue
@@ -133,7 +143,10 @@ class ResponseOrchestrator:
                         action_type=action_cfg.action_type,
                         target=target,
                         idempotency_key=idempotency_key,
-                        parameters={"action_type": action_cfg.action_type.value, "reason": "Awaiting analyst review"},
+                        parameters={
+                            "action_type": action_cfg.action_type.value,
+                            "reason": "Awaiting analyst review",
+                        },
                         guardrail_decisions=guardrail_res.decisions,
                         status=ActionStatus.AWAITING_APPROVAL,
                         ttl_seconds=action_cfg.ttl_seconds,
@@ -154,7 +167,11 @@ class ResponseOrchestrator:
                     await self._ledger.append_entry(
                         entry_type=EntryType.ACTION_PROPOSED,
                         incident_id=incident.id,
-                        payload={"action_id": str(action.id), "action_type": action_cfg.action_type.value, "target": target},
+                        payload={
+                            "action_id": str(action.id),
+                            "action_type": action_cfg.action_type.value,
+                            "target": target,
+                        },
                     )
                     actions_taken.append(action)
                     continue
@@ -165,20 +182,26 @@ class ResponseOrchestrator:
                     action_type=action_cfg.action_type,
                     target=target,
                     idempotency_key=idempotency_key,
-                    parameters={"action_type": action_cfg.action_type.value, "reason": "Autonomous playbook policy"},
+                    parameters={
+                        "action_type": action_cfg.action_type.value,
+                        "reason": "Autonomous playbook policy",
+                    },
                     guardrail_decisions=guardrail_res.decisions,
                     status=ActionStatus.EXECUTING,
                     ttl_seconds=action_cfg.ttl_seconds,
                 )
 
                 connector = self._get_connector_for_action(action_cfg.action_type)
-                now = datetime.now(timezone.utc)
+                now = datetime.now(UTC)
                 try:
                     exec_result = await connector.execute(
                         action_id=action.id,
                         incident_id=incident.id,
                         target=target,
-                        parameters={"action_type": action_cfg.action_type.value, "reason": "Autonomous policy"},
+                        parameters={
+                            "action_type": action_cfg.action_type.value,
+                            "reason": "Autonomous policy",
+                        },
                         ttl_seconds=action_cfg.ttl_seconds,
                     )
                     updated_action = await self._action_repo.update_status(
@@ -188,7 +211,11 @@ class ResponseOrchestrator:
                         execution_result=exec_result,
                     )
                     # Move incident to CONTAINED if containment action succeeded
-                    if action_cfg.action_type in (ActionType.BLOCK_IP, ActionType.ISOLATE_HOST, ActionType.DISABLE_USER):
+                    if action_cfg.action_type in (
+                        ActionType.BLOCK_IP,
+                        ActionType.ISOLATE_HOST,
+                        ActionType.DISABLE_USER,
+                    ):
                         await self._incident_repo.update_incident(
                             incident_id=incident.id,
                             status=IncidentStatus.CONTAINED,
@@ -200,12 +227,20 @@ class ResponseOrchestrator:
                         title=f"Autonomous Action Executed: {action_cfg.action_type.value} on {target}",
                         description=f"Action successfully applied with {action_cfg.ttl_seconds or 'no'}s TTL.",
                         actor="autonomous_response_engine",
-                        metadata={"action_id": str(action.id), "ttl_seconds": action_cfg.ttl_seconds},
+                        metadata={
+                            "action_id": str(action.id),
+                            "ttl_seconds": action_cfg.ttl_seconds,
+                        },
                     )
                     await self._ledger.append_entry(
                         entry_type=EntryType.ACTION_EXECUTED,
                         incident_id=incident.id,
-                        payload={"action_id": str(action.id), "action_type": action_cfg.action_type.value, "target": target, "result": exec_result},
+                        payload={
+                            "action_id": str(action.id),
+                            "action_type": action_cfg.action_type.value,
+                            "target": target,
+                            "result": exec_result,
+                        },
                     )
                     if updated_action:
                         actions_taken.append(updated_action)
@@ -229,7 +264,7 @@ class ResponseOrchestrator:
         if not action:
             raise EntityNotFoundError("ResponseAction", str(action_id))
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         connector = self._get_connector_for_action(action.action_type)
         exec_result = await connector.execute(
             action_id=action.id,
@@ -248,7 +283,11 @@ class ResponseOrchestrator:
         )
 
         # Move incident to CONTAINED
-        if action.action_type in (ActionType.BLOCK_IP, ActionType.ISOLATE_HOST, ActionType.DISABLE_USER):
+        if action.action_type in (
+            ActionType.BLOCK_IP,
+            ActionType.ISOLATE_HOST,
+            ActionType.DISABLE_USER,
+        ):
             await self._incident_repo.update_incident(
                 incident_id=action.incident_id,
                 status=IncidentStatus.CONTAINED,
@@ -271,7 +310,9 @@ class ResponseOrchestrator:
         assert updated is not None
         return updated
 
-    async def deny_action(self, action_id: UUID, denier_username: str, reason: str) -> ResponseAction:
+    async def deny_action(
+        self, action_id: UUID, denier_username: str, reason: str
+    ) -> ResponseAction:
         """Manually deny a pending response action."""
         action = await self._action_repo.get_by_id(action_id)
         if not action:
@@ -301,13 +342,15 @@ class ResponseOrchestrator:
         assert updated is not None
         return updated
 
-    async def rollback_action(self, action_id: UUID, actor_username: str, reason: str) -> ResponseAction:
+    async def rollback_action(
+        self, action_id: UUID, actor_username: str, reason: str
+    ) -> ResponseAction:
         """Revert a previously executed response action."""
         action = await self._action_repo.get_by_id(action_id)
         if not action:
             raise EntityNotFoundError("ResponseAction", str(action_id))
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         connector = self._get_connector_for_action(action.action_type)
         await connector.rollback(
             action_id=action.id,
@@ -333,7 +376,11 @@ class ResponseOrchestrator:
         await self._ledger.append_entry(
             entry_type=EntryType.ACTION_ROLLED_BACK,
             incident_id=action.incident_id,
-            payload={"action_id": str(action.id), "rolled_back_by": actor_username, "reason": reason},
+            payload={
+                "action_id": str(action.id),
+                "rolled_back_by": actor_username,
+                "reason": reason,
+            },
         )
 
         assert updated is not None

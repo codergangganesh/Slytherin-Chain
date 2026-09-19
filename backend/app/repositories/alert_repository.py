@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 from sqlalchemy import func, select
@@ -66,7 +66,7 @@ class AlertRepository:
 
     async def is_suppressed(self, rule_id: str, group_by_key: str, suppress_seconds: int) -> bool:
         """Check if an alert for the given rule and group key was raised within the suppression window."""
-        cutoff = datetime.now(timezone.utc) - timedelta(seconds=suppress_seconds)
+        cutoff = datetime.now(UTC) - timedelta(seconds=suppress_seconds)
         stmt = (
             select(func.count())
             .select_from(AlertOrm)
@@ -88,6 +88,10 @@ class AlertRepository:
 
     async def list_alerts_by_incident(self, incident_id: UUID) -> list[Alert]:
         """Fetch all alerts correlated to an incident."""
-        stmt = select(AlertOrm).where(AlertOrm.incident_id == incident_id).order_by(AlertOrm.created_at.asc())
+        stmt = (
+            select(AlertOrm)
+            .where(AlertOrm.incident_id == incident_id)
+            .order_by(AlertOrm.created_at.asc())
+        )
         result = await self._session.execute(stmt)
         return [self._to_domain(orm) for orm in result.scalars().all()]

@@ -9,10 +9,8 @@ from __future__ import annotations
 import logging
 import uuid
 from contextvars import ContextVar
-from typing import Any
 
 import structlog
-
 
 # Context variable for correlation ID propagation across async tasks
 correlation_id_var: ContextVar[str] = ContextVar("correlation_id", default="")
@@ -43,8 +41,8 @@ def set_correlation_id(correlation_id: str) -> None:
 def add_correlation_id(
     logger: structlog.types.WrappedLogger,
     method_name: str,
-    event_dict: dict[str, Any],
-) -> dict[str, Any]:
+    event_dict: structlog.types.EventDict,
+) -> structlog.types.EventDict:
     """Structlog processor that injects the correlation ID into every log entry.
 
     Args:
@@ -53,7 +51,7 @@ def add_correlation_id(
         event_dict: The event dictionary being built.
 
     Returns:
-        dict[str, Any]: The event dictionary with correlation_id added.
+        structlog.types.EventDict: The event dictionary with correlation_id added.
     """
     event_dict["correlation_id"] = get_correlation_id()
     return event_dict
