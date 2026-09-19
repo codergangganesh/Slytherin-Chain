@@ -123,6 +123,33 @@ export const IncidentDetailPage: React.FC = () => {
     }
   };
 
+  const [downloadingReport, setDownloadingReport] = useState(false);
+
+  const handleDownloadReport = async () => {
+    if (!reportUrl) return;
+    setDownloadingReport(true);
+    try {
+      const token = localStorage.getItem("sentinel_token");
+      const res = await fetch(reportUrl, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!res.ok) throw new Error(`Download failed: HTTP ${res.status}`);
+      const blob = await res.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = `incident_report_${incident?.reference_id || id}.${reportFormat}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (e: any) {
+      alert(`Download error: ${e.message}`);
+    } finally {
+      setDownloadingReport(false);
+    }
+  };
+
   if (loading || !incident) {
     return <div className="p-8 text-center text-slate-400">Loading incident details...</div>;
   }
@@ -278,14 +305,14 @@ export const IncidentDetailPage: React.FC = () => {
             </div>
 
             {reportUrl && (
-              <a
-                href={reportUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="block text-center py-1.5 bg-emerald-600/20 border border-emerald-500/30 text-emerald-400 rounded text-xs font-semibold hover:bg-emerald-600/30 transition-colors"
+              <button
+                type="button"
+                onClick={handleDownloadReport}
+                disabled={downloadingReport}
+                className="w-full py-1.5 bg-emerald-600/20 border border-emerald-500/30 text-emerald-400 rounded text-xs font-semibold hover:bg-emerald-600/30 transition-colors disabled:opacity-50"
               >
-                Download Generated Report
-              </a>
+                {downloadingReport ? "Downloading..." : "Download Generated Report"}
+              </button>
             )}
           </div>
         </div>

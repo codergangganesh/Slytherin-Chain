@@ -170,8 +170,12 @@ async def _check_dependency_health(settings: Any) -> dict[str, Any]:
     try:
         import redis.asyncio as aioredis
 
-        redis_client = aioredis.from_url(settings.redis_url)
-        await redis_client.ping()
+        redis_client = aioredis.from_url(
+            settings.redis_url,
+            socket_connect_timeout=0.2,
+            socket_timeout=0.2,
+        )
+        await asyncio.wait_for(redis_client.ping(), timeout=0.3)
         await redis_client.aclose()
         checks["redis"] = {"status": "ok"}
     except Exception as exc:
@@ -180,12 +184,15 @@ async def _check_dependency_health(settings: Any) -> dict[str, Any]:
     # MinIO
     try:
         from minio import Minio
+        import urllib3
 
+        http_client = urllib3.PoolManager(timeout=urllib3.Timeout(connect=0.2, read=0.3))
         minio_client = Minio(
             settings.minio_endpoint,
             access_key=settings.minio_access_key,
             secret_key=settings.minio_secret_key,
             secure=settings.minio_use_ssl,
+            http_client=http_client,
         )
         minio_client.list_buckets()
         checks["minio"] = {"status": "ok"}
@@ -196,7 +203,7 @@ async def _check_dependency_health(settings: Any) -> dict[str, Any]:
     try:
         from web3 import Web3
 
-        w3 = Web3(Web3.HTTPProvider(settings.anchor_chain_rpc_url))
+        w3 = Web3(Web3.HTTPProvider(settings.anchor_chain_rpc_url, request_kwargs={"timeout": 0.3}))
         if w3.is_connected():
             checks["blockchain"] = {"status": "ok", "chain_id": str(w3.eth.chain_id)}
         else:
