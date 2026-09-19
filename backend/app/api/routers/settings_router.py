@@ -110,10 +110,9 @@ async def list_playbooks(
     _: Annotated[User, Depends(require_viewer)],
 ) -> list[dict[str, Any]]:
     """Retrieve all loaded response playbooks."""
-    playbooks = PlaybookLoader.load_from_directory(
-        PlaybookLoader.__module__  # fallback default
-    )
     from pathlib import Path
     pb_dir = Path(__file__).resolve().parent.parent.parent.parent / "playbooks"
+    if not pb_dir.exists():
+        pb_dir = Path(__file__).resolve().parents[2] / "backend" / "playbooks"
     loaded = PlaybookLoader.load_from_directory(pb_dir)
     return [p.model_dump() for p in loaded]

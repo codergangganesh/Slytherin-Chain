@@ -33,7 +33,7 @@ def compute_entry_hash(
     """
     canonical_dict = {
         "sequence_number": sequence_number,
-        "entry_type": entry_type.value,
+        "entry_type": entry_type.value if hasattr(entry_type, "value") else str(entry_type),
         "incident_id": str(incident_id) if incident_id else None,
         "payload": payload,
         "created_at": created_at,

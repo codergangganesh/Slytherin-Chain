@@ -14,6 +14,8 @@ from app.config.settings import get_settings
 class SlidingWindowCounter:
     """Maintains time-windowed state across events in Redis with an in-memory fallback."""
 
+    _redis_available: bool = True
+
     def __init__(self, redis_client: aioredis.Redis | None = None) -> None:
         self._redis = redis_client
         self._settings = get_settings()
@@ -22,13 +24,18 @@ class SlidingWindowCounter:
 
     async def get_client(self) -> aioredis.Redis | None:
         """Lazily initialize Redis client."""
+        if not SlidingWindowCounter._redis_available:
+            return None
         if self._redis is None:
             try:
                 self._redis = aioredis.from_url(
                     self._settings.redis_url,
                     decode_responses=True,
+                    socket_connect_timeout=0.2,
+                    socket_timeout=0.2,
                 )
             except Exception:
+                SlidingWindowCounter._redis_available = False
                 self._redis = None
         return self._redis
 
@@ -80,7 +87,7 @@ class SlidingWindowCounter:
                 return count, matched_ids
             except Exception:
                 # Fallback to memory on Redis error
-                pass
+                SlidingWindowCounter._redis_available = False
 
         # Memory Fallback
         store = self._mem_store[key]
@@ -123,7 +130,7 @@ class SlidingWindowCounter:
                     steps_found[s_idx] = eid
                 return [steps_found[k] for k in sorted(steps_found.keys())]
             except Exception:
-                pass
+                SlidingWindowCounter._redis_available = False
 
         # Memory fallback
         store = self._mem_store[key]

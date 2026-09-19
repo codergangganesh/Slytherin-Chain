@@ -14,17 +14,27 @@ from app.domain.normalized_event import NormalizedEvent
 class EventPublisher:
     """Publishes normalized security events onto the Redis Stream pipeline."""
 
+    _redis_available: bool = True
+
     def __init__(self, redis_client: aioredis.Redis | None = None) -> None:
         self._settings = get_settings()
         self._redis = redis_client
 
-    async def get_client(self) -> aioredis.Redis:
+    async def get_client(self) -> aioredis.Redis | None:
         """Lazily initialize Redis client if not injected."""
+        if not EventPublisher._redis_available:
+            return None
         if self._redis is None:
-            self._redis = aioredis.from_url(
-                self._settings.redis_url,
-                decode_responses=True,
-            )
+            try:
+                self._redis = aioredis.from_url(
+                    self._settings.redis_url,
+                    decode_responses=True,
+                    socket_connect_timeout=0.2,
+                    socket_timeout=0.2,
+                )
+            except Exception:
+                EventPublisher._redis_available = False
+                return None
         return self._redis
 
     @staticmethod
@@ -54,14 +64,19 @@ class EventPublisher:
 
     async def publish(self, event: NormalizedEvent) -> str:
         """Publish a single normalized event to the stream."""
-        client = await self.get_client()
-        stream_name = self._settings.redis_stream_events
-        fields = self._serialize_event(event)
+        if not EventPublisher._redis_available:
+            return ""
         try:
+            client = await self.get_client()
+            if not client:
+                return ""
+            stream_name = self._settings.redis_stream_events
+            fields = self._serialize_event(event)
             message_id: str = await client.xadd(stream_name, fields)
             return message_id
         except Exception:
             # Safe degradation if Redis is unavailable during testing
+            EventPublisher._redis_available = False
             return ""
 
     async def publish_batch(self, events: list[NormalizedEvent]) -> list[str]:
